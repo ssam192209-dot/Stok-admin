@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Toko - Firebase Sync</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #f0f2f8;
+            --bg-secondary: #ffffff;
+            --bg-sidebar: #0f0f1f;
+            --bg-sidebar-hover: #1e1e3a;
+            --text-primary: #0f0f1f;
+            --text-secondary: #4a4a6a;
+            --text-light: #ffffff;
+            --text-muted: #7a7a9a;
+            --border-color: #e2e8f0;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.10);
+            --card-bg: #ffffff;
+            --accent: #4f46e5;
+            --accent-light: #818cf8;
+            --accent-gradient: linear-gradient(135deg, #4f46e5, #818cf8);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius: 14px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0a18;
+            --bg-secondary: #14142a;
+            --bg-sidebar: #06060e;
+            --bg-sidebar-hover: #1a1a36;
+            --text-primary: #e8e8f0;
+            --text-secondary: #b0b0cc;
+            --text-muted: #6a6a8a;
+            --border-color: #2a2a44;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.6);
+            --card-bg: #14142a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            padding: 28px 18px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 100;
+            transition: background var(--transition), transform 0.3s ease;
+            overflow-y: auto;
+        }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 28px; }
+        .sidebar-brand i { font-size: 28px; color: var(--accent-light); background: rgba(79,70,229,0.2); padding: 10px; border-radius: 12px; }
+        .sidebar-brand h1 { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        .sidebar-brand span { color: var(--accent-light); }
+        .sidebar-menu { list-style: none; flex: 1; }
+        .sidebar-menu li { margin-bottom: 4px; }
+        .sidebar-menu a { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 10px; color: var(--text-muted); text-decoration: none; font-weight: 500; font-size: 14px; transition: all var(--transition); position: relative; cursor: pointer; }
+        .sidebar-menu a i { width: 20px; font-size: 17px; text-align: center; }
+        .sidebar-menu a:hover { background: var(--bg-sidebar-hover); color: #fff; }
+        .sidebar-menu a.active { background: var(--accent); color: #fff; box-shadow: 0 6px 20px rgba(79,70,229,0.35); }
+        .sidebar-menu a .badge { margin-left: auto; background: rgba(255,255,255,0.12); padding: 2px 10px; border-radius: 30px; font-size: 11px; font-weight: 600; }
+        .sidebar-menu a.active .badge { background: rgba(255,255,255,0.2); }
+        .menu-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); padding: 16px 16px 8px; opacity: 0.5; font-weight: 600; }
+        .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px; }
+
+        .theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 10px; cursor: pointer; transition: background var(--transition); border: none; width: 100%; color: var(--text-muted); font-size: 13px; font-weight: 500; }
+        .theme-toggle:hover { background: rgba(255,255,255,0.08); }
+        .theme-toggle .toggle-track { width: 44px; height: 24px; background: #3a3a5a; border-radius: 30px; position: relative; transition: background 0.3s; flex-shrink: 0; }
+        .theme-toggle .toggle-track .thumb { width: 18px; height: 18px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        [data-theme="dark"] .theme-toggle .toggle-track { background: var(--accent); }
+        [data-theme="dark"] .theme-toggle .toggle-track .thumb { transform: translateX(20px); }
+
+        .sync-status { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.04); color: var(--text-muted); }
+        .sync-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+        .sync-status.online { color: var(--success); }
+        .sync-status.online .dot { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 1.6s infinite; }
+        .sync-status.offline { color: var(--danger); }
+        .sync-status.offline .dot { background: var(--danger); }
+        .sync-status.connecting { color: var(--warning); }
+        .sync-status.connecting .dot { background: var(--warning); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+        .main-content { margin-left: 260px; flex: 1; padding: 30px 36px; min-height: 100vh; transition: background var(--transition), padding 0.3s; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+        .page-header h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+        .page-header .subtitle { color: var(--text-secondary); font-size: 14px; font-weight: 400; margin-top: 2px; }
+        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .header-actions .date-badge { background: var(--card-bg); padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow); border: 1px solid var(--border-color); color: var(--text-secondary); }
+        .btn-primary { background: var(--accent-gradient); border: none; padding: 9px 22px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 6px 20px rgba(79,70,229,0.3); display: flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(79,70,229,0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-success { background: var(--success); border: none; padding: 9px 22px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(16,185,129,0.4); }
+        .btn-danger { background: var(--danger); border: none; padding: 9px 22px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(239,68,68,0.4); }
+        .btn-warning { background: var(--warning); border: none; padding: 9px 22px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(245,158,11,0.4); }
+
+        .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+        .stat-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); border: 1px solid var(--border-color); transition: all var(--transition); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+        .stat-card .stat-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .stat-card .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+        .stat-card .stat-change { font-size: 12px; font-weight: 600; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 30px; }
+        .stat-change.positive { color: var(--success); background: rgba(16,185,129,0.12); }
+        .stat-change.negative { color: var(--danger); background: rgba(239,68,68,0.12); }
+        .stat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; }
+        .stat-icon.blue { background: rgba(79,70,229,0.12); color: var(--accent); }
+        .stat-icon.green { background: rgba(16,185,129,0.12); color: var(--success); }
+        .stat-icon.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+        .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px; }
+        .card { background: var(--card-bg); border-radius: var(--radius); padding: 22px 24px; box-shadow: var(--shadow); border: 1px solid var(--border-color); transition: all var(--transition); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
+        .card-header h3 { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .card-header h3 i { color: var(--accent); }
+        .card-header .action-link { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table th { text-align: left; padding: 10px 8px 10px 0; color: var(--text-secondary); font-weight: 600; border-bottom: 2px solid var(--border-color); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        table td { padding: 12px 8px 12px 0; border-bottom: 1px solid var(--border-color); }
+        table tr:last-child td { border-bottom: none; }
+        .status-badge { padding: 3px 12px; border-radius: 30px; font-size: 11px; font-weight: 600; }
+        .status-badge.in-stock { background: rgba(16,185,129,0.12); color: var(--success); }
+        .status-badge.low-stock { background: rgba(245,158,11,0.14); color: var(--warning); }
+        .status-badge.out-stock { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .row-action { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 4px 8px; border-radius: 6px; }
+        .row-action:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+
+        .finance-list { display: flex; flex-direction: column; gap: 12px; }
+        .finance-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+        .finance-item:last-child { border-bottom: none; }
+        .finance-item .label { font-weight: 500; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+        .finance-item .label i { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: var(--bg-primary); color: var(--accent); font-size: 14px; }
+        .finance-item .amount { font-weight: 700; font-size: 14px; }
+        .finance-item .amount.positive { color: var(--success); }
+        .finance-item .amount.negative { color: var(--danger); }
+        .finance-item .amount.zero { color: var(--text-secondary); }
+
+        .progress-bar { width: 100%; height: 6px; background: var(--bg-primary); border-radius: 10px; margin-top: 6px; overflow: hidden; }
+        .progress-bar .fill { height: 100%; border-radius: 10px; background: var(--accent-gradient); transition: width 0.4s ease; }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+        .empty-state i { font-size: 48px; color: var(--text-muted); margin-bottom: 16px; opacity: 0.3; }
+        .empty-state h4 { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
+        .empty-state p { font-size: 14px; }
+
+        .activity-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-item i { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+        .activity-item .a-text { flex: 1; }
+        .activity-item .a-time { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: var(--card-bg); border-radius: var(--radius); padding: 26px; width: 100%; max-width: 480px; box-shadow: var(--shadow-hover); max-height: 90vh; overflow-y: auto; }
+        .modal-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .modal-box h3 i { color: var(--accent); }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-family: inherit; font-size: 13px; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
+        .form-group input[readonly] { background: var(--bg-secondary); cursor: not-allowed; opacity: 0.7; }
+        .form-group .helper-text { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-secondary { flex: 1; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 10px; border-radius: 30px; color: var(--text-primary); font-weight: 600; font-size: 13px; cursor: pointer; }
+        .modal-actions .btn-primary { flex: 1; justify-content: center; }
+
+        /* Setup banner */
+        .setup-banner { background: rgba(245,158,11,0.12); border: 1px solid var(--warning); color: var(--warning); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; }
+        .setup-banner strong { display: block; margin-bottom: 6px; font-size: 14px; }
+        .setup-banner code { background: rgba(0,0,0,0.15); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+
+        /* Modal type badge */
+        .modal-type-badge { display: inline-block; padding: 4px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; margin-left: 10px; }
+        .modal-type-badge.masuk { background: rgba(16,185,129,0.15); color: var(--success); }
+        .modal-type-badge.keluar { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .modal-type-badge.pendapatan { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .modal-type-badge.pengeluaran { background: rgba(79,70,229,0.15); color: var(--accent); }
+
+        .field-highlight { border-color: var(--success) !important; background: rgba(16,185,129,0.05) !important; }
+        .field-highlight:focus { border-color: var(--success) !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .two-col { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction: column; width: 100%; }
+            .action-buttons .btn-primary,
+            .action-buttons .btn-success,
+            .action-buttons .btn-danger,
+            .action-buttons .btn-warning { width: 100%; justify-content: center; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); width: 270px; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 18px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .page-header h2 { font-size: 20px; }
+            .header-actions .date-badge { display: none; }
+            .hamburger { display: flex !important; }
+        }
+        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+        .hamburger { display: none; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px; font-size: 18px; cursor: pointer; color: var(--text-primary); box-shadow: var(--shadow); align-items: center; gap: 8px; }
+        .hamburger span { font-size: 13px; font-weight: 600; }
+
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; }
+        .overlay.active { display: block; }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="overlay"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-store-alt"></i>
+            <h1>Toko<span>Ku</span></h1>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="menu-label">Menu Utama</li>
+            <li><a href="#" class="active" data-menu="dashboard"><i class="fas fa-th-large"></i> Dashboard</a></li>
+
+            <li class="menu-label" style="margin-top: 12px;">Manajemen</li>
+            <li><a href="#" data-menu="stok"><i class="fas fa-boxes"></i> Stok <span class="badge" id="badgeStok">0</span></a></li>
+            <li><a href="#" data-menu="pengeluaran"><i class="fas fa-arrow-down"></i> Pengeluaran</a></li>
+            <li><a href="#" data-menu="pendapatan"><i class="fas fa-arrow-up"></i> Pendapatan</a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <div class="sync-status connecting" id="syncStatus">
+                <div class="dot"></div>
+                <span id="syncStatusText">Menghubungkan...</span>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <span><i class="fas fa-moon"></i> Mode Gelap</span>
+                <div class="toggle-track"><div class="thumb"></div></div>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content" id="mainContent">
+
+        <div class="page-header">
+            <div>
+                <h2 id="pageTitle">Dashboard Toko</h2>
+                <div class="subtitle" id="pageSubtitle">Selamat datang! Ringkasan stok dan keuangan hari ini.</div>
+            </div>
+            <div class="header-actions">
+                <span class="date-badge"><i class="far fa-calendar-alt"></i> <span id="currentDate"></span></span>
+                <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i> <span>Menu</span></button>
+                <div class="action-buttons">
+                    <button class="btn-success" id="btnStokMasuk"><i class="fas fa-plus-circle"></i> Stok Masuk</button>
+                    <button class="btn-danger" id="btnStokKeluar"><i class="fas fa-minus-circle"></i> Stok Keluar</button>
+                    <button class="btn-warning" id="btnPendapatan"><i class="fas fa-coins"></i> Pendapatan</button>
+                    <button class="btn-primary" id="btnPengeluaran"><i class="fas fa-arrow-down"></i> Pengeluaran</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="setupBannerWrap"></div>
+
+        <!-- ===== DASHBOARD ===== -->
+        <div id="dashboardContent">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-boxes"></i></div>
+                    <div class="stat-label">Total Stok</div>
+                    <div class="stat-value" id="statTotalStok">0</div>
+                    <div class="stat-change positive" id="statStokChange"><i class="fas fa-minus"></i> 0 jenis barang</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-arrow-up"></i></div>
+                    <div class="stat-label">Pendapatan (Bulan Ini)</div>
+                    <div class="stat-value" id="statPendapatan">Rp 0</div>
+                    <div class="stat-change positive" id="statPendapatanChange"><i class="fas fa-minus"></i> 0 transaksi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red"><i class="fas fa-arrow-down"></i></div>
+                    <div class="stat-label">Pengeluaran (Bulan Ini)</div>
+                    <div class="stat-value" id="statPengeluaran">Rp 0</div>
+                    <div class="stat-change negative" id="statPengeluaranChange"><i class="fas fa-minus"></i> 0 transaksi</div>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-boxes"></i> Stok Barang</h3>
+                        <a href="#" class="action-link" data-menu="stok">Lihat Semua →</a>
+                    </div>
+                    <div id="dashboardStokWrap">
+                        <div class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <h4>Belum Ada Data Stok</h4>
+                            <p>Tambahkan stok barang pertama Anda.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Ringkasan Keuangan</h3>
+                    </div>
+                    <div class="finance-list">
+                        <div class="finance-item">
+                            <div class="label"><i class="fas fa-arrow-up"></i> Pendapatan</div>
+                            <div class="amount zero" id="finPendapatan">Rp 0</div>
+                        </div>
+                        <div class="finance-item">
+                            <div class="label"><i class="fas fa-arrow-down"></i> Pengeluaran</div>
+                            <div class="amount zero" id="finPengeluaran">Rp 0</div>
+                        </div>
+                        <div class="finance-item">
+                            <div class="label"><i class="fas fa-hand-holding-usd"></i> Keuntungan Bersih</div>
+                            <div class="amount zero" id="finBersih">Rp 0</div>
+                        </div>
+                        <div style="margin-top: 6px;">
+                            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);">
+                                <span>Rasio Pendapatan vs Pengeluaran</span>
+                                <span id="finRatioText">0%</span>
+                            </div>
+                            <div class="progress-bar"><div class="fill" id="finRatioFill" style="width:0%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-clock"></i> Aktivitas Terbaru</h3></div>
+                <div id="activityWrap">
+                    <div class="empty-state" style="padding: 20px;">
+                        <i class="fas fa-inbox" style="font-size: 32px;"></i>
+                        <h4>Belum Ada Aktivitas</h4>
+                        <p style="font-size: 13px;">Aktivitas akan muncul di sini.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageContent" style="display: none;"></div>
+    </main>
+
+    <!-- ===== MODAL TAMBAH DATA ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Tambah Data</h3>
+            <form id="modalForm"></form>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="btnCancel">Batal</button>
+                <button type="submit" form="modalForm" class="btn-primary" id="btnSubmit"><i class="fas fa-check"></i> Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // DAFTAR NAMA BARANG
+        // =====================================================================
+        var daftarNamaBarang = [
+            'Daging 2Kg', 'Daging Burger', 'Lebanese Xi', 'Lebanese Besar', 'Lebanese Kecil',
+            'Roti Burger Beef', 'Roti Burger Petty', 'Roti Super Burger', 'Roti Hotbeef',
+            'Kebab Promo/Mini', 'Kebab Hitam', 'Keju Slice', 'Keju Parut', 'Sosis Besar',
+            'Sosis Kecil', 'Margarine', 'Lettuce', 'Bombay', 'Saus Sambal', 'Saus Tomat',
+            'Mayonaise', 'Kertas Bungkus', 'Kertas Exclusive', 'Sarung Tangan', 'Solatip',
+            'Kantong Plastik', 'Tissu'
+        ];
+
+        var hargaDefaultMap = {
+            'Daging Burger': 6000,
+            'Lebanese Xi': 18000,
+            'Lebanese Besar': 15000,
+            'Lebanese Kecil': 11000,
+            'Roti Burger Beef': 11000,
+            'Roti Burger Petty': 13000,
+            'Roti Super Burger': 15000,
+            'Roti Hotbeef': 11000,
+            'Kebab Promo/Mini': 8000,
+            'Kebab Hitam': 15000,
+            'Keju Slice': 3000,
+            'Keju Parut': 2000,
+            'Sosis Besar': 6000,
+            'Sosis Kecil': 3000
+        };
+
+        window.daftarNamaBarang = daftarNamaBarang;
+        window.hargaDefaultMap = hargaDefaultMap;
+
+        function getHargaForNama(nama) {
+            return hargaDefaultMap[nama] || 0;
+        }
+        window.getHargaForNama = getHargaForNama;
+
+        function fmtRupiahLocal(n) {
+            return 'Rp ' + Math.round(n || 0).toLocaleString('id-ID');
+        }
+        window.fmtRupiahLocal = fmtRupiahLocal;
+    </script>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAnalytics, isSupported as analyticsIsSupported } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+        import {
+            getFirestore, collection, addDoc, deleteDoc, doc,
+            onSnapshot, query, orderBy, serverTimestamp,
+            runTransaction, limit, getDocs
+        } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+        console.log('🔥 Mulai inisialisasi Firebase...');
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJW14IozpCKPf7XqZEoyWunC0AIhsbyt0",
+            authDomain: "stok-toko-2af3a.firebaseapp.com",
+            projectId: "stok-toko-2af3a",
+            storageBucket: "stok-toko-2af3a.firebasestorage.app",
+            messagingSenderId: "1071891844640",
+            appId: "1:1071891844640:web:e59a2f0b1e3fcbf1223645",
+            measurementId: "G-SV2VY9TJ56"
+        };
+
+        const isConfigured = !Object.values(firebaseConfig).some(v => 
+            String(v).startsWith("GANTI_DENGAN") || String(v).includes("YOUR_")
+        );
+
+        var syncStatusEl = document.getElementById('syncStatus');
+        var syncStatusTextEl = document.getElementById('syncStatusText');
+        var setupBannerWrap = document.getElementById('setupBannerWrap');
+
+        function setSyncStatus(state, text) {
+            syncStatusEl.className = 'sync-status ' + state;
+            syncStatusTextEl.textContent = text;
+            console.log('📡 Status sync:', state, '-', text);
+        }
+
+        if (!isConfigured) {
+            setSyncStatus('offline', '❌ Firebase belum dikonfigurasi');
+            setupBannerWrap.innerHTML = `
+                <div class="setup-banner">
+                    <strong><i class="fas fa-triangle-exclamation"></i> ⚠️ Firebase belum terhubung</strong>
+                    <p>Isi <code>firebaseConfig</code> dengan konfigurasi project Firebase Anda.</p>
+                </div>`;
+        }
+
+        var app, db;
+        var stokItemsMap = {};
+        var stokTransaksiList = [];
+        var pengeluaranList = [];
+        var pendapatanList = [];
+        var isFirebaseReady = false;
+
+        function slugify(str) {
+            return String(str).toLowerCase().trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '');
+        }
+
+        function getHargaFromFirestore(nama) {
+            var slug = slugify(nama);
+            var item = stokItemsMap[slug];
+            if (item && item.harga) {
+                return Number(item.harga);
+            }
+            return window.hargaDefaultMap[nama] || 0;
+        }
+
+        window.getHargaFromFirestore = getHargaFromFirestore;
+
+        function fmtRupiah(n) {
+            return 'Rp ' + Math.round(n || 0).toLocaleString('id-ID');
+        }
+
+        function escapeHtml(str) {
+            var d = document.createElement('div');
+            d.textContent = str ?? '';
+            return d.innerHTML;
+        }
+
+        function getStokList() {
+            return window.daftarNamaBarang.map(function(nama) {
+                var slug = slugify(nama);
+                var item = stokItemsMap[slug];
+                return {
+                    id: slug,
+                    nama: nama,
+                    jumlah: item ? (Number(item.jumlah) || 0) : 0,
+                    harga: item ? (Number(item.harga) || 0) : 0,
+                    updatedAt: item ? item.updatedAt : null
+                };
+            });
+        }
+
+        function renderAll() {
+            if (!isFirebaseReady) return;
+            renderBadge();
+            renderDashboard();
+            var menu = window.currentMenu || 'dashboard';
+            if (menu === 'stok') renderStokPage();
+            if (menu === 'pengeluaran') renderPengeluaranPage();
+            if (menu === 'pendapatan') renderPendapatanPage();
+        }
+
+        function renderBadge() {
+            var stokList = getStokList();
+            var totalStok = stokList.reduce(function(sum, s) { return sum + (Number(s.jumlah) || 0); }, 0);
+            document.getElementById('badgeStok').textContent = totalStok.toLocaleString('id-ID');
+        }
+
+        function renderDashboard() {
+            var stokList = getStokList();
+            var totalStok = stokList.reduce(function(sum, s) { return sum + (Number(s.jumlah) || 0); }, 0);
+            var jenisTersedia = stokList.filter(function(s) { return s.jumlah > 0; }).length;
+            document.getElementById('statTotalStok').textContent = totalStok.toLocaleString('id-ID');
+            document.getElementById('statStokChange').innerHTML = '<i class="fas fa-tags"></i> ' + jenisTersedia + '/' + stokList.length + ' jenis tersedia';
+
+            var totalPendapatan = pendapatanList.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+            var totalPengeluaran = pengeluaranList.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+
+            document.getElementById('statPendapatan').textContent = fmtRupiah(totalPendapatan);
+            document.getElementById('statPengeluaran').textContent = fmtRupiah(totalPengeluaran);
+            document.getElementById('statPendapatanChange').innerHTML = '<i class="fas fa-receipt"></i> ' + pendapatanList.length + ' transaksi';
+            document.getElementById('statPengeluaranChange').innerHTML = '<i class="fas fa-receipt"></i> ' + pengeluaranList.length + ' transaksi';
+
+            document.getElementById('finPendapatan').textContent = fmtRupiah(totalPendapatan);
+            document.getElementById('finPengeluaran').textContent = fmtRupiah(totalPengeluaran);
+            var bersih = totalPendapatan - totalPengeluaran;
+            document.getElementById('finBersih').textContent = fmtRupiah(bersih);
+            document.getElementById('finBersih').className = 'amount ' + (bersih > 0 ? 'positive' : (bersih < 0 ? 'negative' : 'zero'));
+
+            var ratio = (totalPendapatan + totalPengeluaran) > 0
+                ? Math.round((totalPendapatan / (totalPendapatan + totalPengeluaran)) * 100) : 0;
+            document.getElementById('finRatioText').textContent = ratio + '%';
+            document.getElementById('finRatioFill').style.width = ratio + '%';
+
+            var stokWrap = document.getElementById('dashboardStokWrap');
+            var priority = { 'out-stock': 0, 'low-stock': 1, 'in-stock': 2 };
+            var stokPreview = [...stokList].sort(function(a, b) {
+                var pa = priority[stokStatus(a.jumlah).cls], pb = priority[stokStatus(b.jumlah).cls];
+                if (pa !== pb) return pa - pb;
+                return a.jumlah - b.jumlah;
+            }).slice(0, 5);
+            var rows = stokPreview.map(function(s) {
+                var st = stokStatus(s.jumlah);
+                return '<tr><td>' + escapeHtml(s.nama) + '</td><td>' + Number(s.jumlah).toLocaleString('id-ID') + '</td><td><span class="status-badge ' + st.cls + '">' + st.label + '</span></td></tr>';
+            }).join('');
+            stokWrap.innerHTML = '<div class="table-wrap"><table><thead><tr><th>Nama Barang</th><th>Jumlah</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+        }
+
+        function stokStatus(jumlah) {
+            var n = Number(jumlah);
+            if (n <= 0) return { cls: 'out-stock', label: 'Habis' };
+            if (n < 10) return { cls: 'low-stock', label: 'Menipis' };
+            return { cls: 'in-stock', label: 'Tersedia' };
+        }
+
+        function renderStokPage() {
+            var stokList = getStokList();
+            var tr = stokList.map(function(s) {
+                var st = stokStatus(s.jumlah);
+                return '<tr>' +
+                    '<td>' + escapeHtml(s.nama) + '</td>' +
+                    '<td style="font-weight:700;">' + Number(s.jumlah).toLocaleString('id-ID') + '</td>' +
+                    '<td>' + (s.harga ? fmtRupiah(s.harga) : '-') + '</td>' +
+                    '<td><span class="status-badge ' + st.cls + '">' + st.label + '</span></td>' +
+                    '</tr>';
+            }).join('');
+            var rows = '<div class="table-wrap"><table><thead><tr><th>Nama Barang</th><th>Stok Saat Ini</th><th>Harga Satuan</th><th>Status</th></tr></thead><tbody>' + tr + '</tbody></table></div>';
+            document.getElementById('pageContent').innerHTML = rows;
+        }
+
+        function renderPengeluaranPage() {
+            var rows;
+            if (pengeluaranList.length === 0) {
+                rows = '<div class="empty-state"><i class="fas fa-wallet"></i><h4>Belum Ada Pengeluaran</h4></div>';
+            } else {
+                var tr = pengeluaranList.map(function(p) {
+                    return '<tr>' +
+                        '<td>' + escapeHtml(p.deskripsi) + '</td>' +
+                        '<td>' + (p.tanggal || '-') + '</td>' +
+                        '<td style="color:var(--danger);font-weight:700;">' + fmtRupiah(p.jumlah) + '</td>' +
+                        '<td><button class="row-action" data-del="pengeluaran" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td>' +
+                        '</tr>';
+                }).join('');
+                rows = '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
+            }
+            document.getElementById('pageContent').innerHTML = rows;
+            attachDeleteHandlers();
+        }
+
+        function renderPendapatanPage() {
+            var rows;
+            if (pendapatanList.length === 0) {
+                rows = '<div class="empty-state"><i class="fas fa-coins"></i><h4>Belum Ada Pendapatan</h4></div>';
+            } else {
+                var tr = pendapatanList.map(function(p) {
+                    var fromStok = p.fromStokKeluar ? ' (dari stok keluar)' : '';
+                    return '<tr>' +
+                        '<td>' + escapeHtml(p.deskripsi) + fromStok + '</td>' +
+                        '<td>' + (p.tanggal || '-') + '</td>' +
+                        '<td style="color:var(--success);font-weight:700;">' + fmtRupiah(p.jumlah) + '</td>' +
+                        '<td><button class="row-action" data-del="pendapatan" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td>' +
+                        '</tr>';
+                }).join('');
+                rows = '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
+            }
+            document.getElementById('pageContent').innerHTML = rows;
+            attachDeleteHandlers();
+        }
+
+        function attachDeleteHandlers() {
+            document.querySelectorAll('[data-del]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    if (!db) return;
+                    var coll = btn.dataset.del;
+                    var id = btn.dataset.id;
+                    if (!confirm('Hapus data ini?')) return;
+                    deleteDoc(doc(db, coll, id)).then(function() {
+                        console.log('✅ Data dihapus');
+                    }).catch(function(e) {
+                        alert('Gagal menghapus: ' + e.message);
+                    });
+                });
+            });
+        }
+
+        // =====================================================================
+        // SUBMIT FUNCTIONS
+        // =====================================================================
+        async function submitStokMasuk(data) {
+            var nama = data.nama;
+            var jumlahInput = Number(data.jumlah);
+            var slug = slugify(nama);
+            var itemRef = doc(db, 'stok_items', slug);
+            var hargaSatuan = getHargaFromFirestore(nama);
+
+            await runTransaction(db, async function(tx) {
+                var snap = await tx.get(itemRef);
+                var current = snap.exists() ? (Number(snap.data().jumlah) || 0) : 0;
+                var next = current + jumlahInput;
+                var payload = { 
+                    nama: nama, 
+                    jumlah: next, 
+                    harga: hargaSatuan,
+                    updatedAt: serverTimestamp() 
+                };
+                tx.set(itemRef, payload, { merge: true });
+            });
+
+            await addDoc(collection(db, 'stok_transaksi'), {
+                nama: nama, 
+                tipe: 'masuk', 
+                jumlah: jumlahInput,
+                harga: hargaSatuan,
+                createdAt: serverTimestamp()
+            });
+
+            return true;
+        }
+
+        // ===== FUNGSI STOK KELUAR & PENDAPATAN (IDENTIK) =====
+        async function submitStokKeluar(data) {
+            var nama = data.nama;
+            var jumlahInput = Number(data.jumlah);
+            var slug = slugify(nama);
+            var itemRef = doc(db, 'stok_items', slug);
+            var hargaSatuan = getHargaFromFirestore(nama);
+
+            var clamped = false;
+            await runTransaction(db, async function(tx) {
+                var snap = await tx.get(itemRef);
+                var current = snap.exists() ? (Number(snap.data().jumlah) || 0) : 0;
+                var next = current - jumlahInput;
+                if (next < 0) { next = 0; clamped = true; }
+                var payload = { 
+                    nama: nama, 
+                    jumlah: next, 
+                    harga: hargaSatuan,
+                    updatedAt: serverTimestamp() 
+                };
+                tx.set(itemRef, payload, { merge: true });
+            });
+
+            // Catat riwayat stok keluar
+            await addDoc(collection(db, 'stok_transaksi'), {
+                nama: nama, 
+                tipe: 'keluar', 
+                jumlah: jumlahInput,
+                harga: hargaSatuan,
+                createdAt: serverTimestamp()
+            });
+
+            // ===== TAMBAHKAN KE PENDAPATAN =====
+            if (hargaSatuan > 0) {
+                var totalPendapatan = jumlahInput * hargaSatuan;
+                var pendapatanDeskripsi = data.deskripsi || 'Penjualan ' + nama + ' (' + jumlahInput + ' pcs @ ' + fmtRupiah(hargaSatuan) + ')';
+                
+                await addDoc(collection(db, 'pendapatan'), {
+                    deskripsi: pendapatanDeskripsi,
+                    jumlah: totalPendapatan,
+                    tanggal: data.tanggal || new Date().toISOString().slice(0, 10),
+                    createdAt: serverTimestamp(),
+                    fromStokKeluar: true,
+                    barang: nama,
+                    jumlahBarang: jumlahInput,
+                    hargaSatuan: hargaSatuan
+                });
+                
+                console.log('💰 Pendapatan:', pendapatanDeskripsi, '=', fmtRupiah(totalPendapatan));
+            }
+
+            return clamped;
+        }
+
+        // ===== FUNGSI PENDAPATAN - IDENTIK DENGAN STOK KELUAR =====
+        // Fungsi ini sama persis dengan submitStokKeluar di atas
+        // Tapi kita bisa panggil submitStokKeluar langsung dari tombol pendapatan
+        async function submitPendapatan(data) {
+            // Panggil fungsi stok keluar yang sudah ada
+            return await submitStokKeluar(data);
+        }
+
+        async function submitPengeluaran(data) {
+            await addDoc(collection(db, 'pengeluaran'), {
+                deskripsi: data.deskripsi,
+                jumlah: Number(data.jumlah),
+                tanggal: data.tanggal || new Date().toISOString().slice(0, 10),
+                createdAt: serverTimestamp()
+            });
+        }
+
+        // =====================================================================
+        // INIT FIREBASE
+        // =====================================================================
+        if (isConfigured) {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                console.log('✅ Firebase app berhasil diinisialisasi');
+
+                setSyncStatus('connecting', '⏳ Menghubungkan ke Firestore...');
+
+                const testRef = collection(db, 'stok_items');
+                getDocs(query(testRef, limit(1))).then(function() {
+                    console.log('✅ Koneksi ke Firestore berhasil!');
+                    setSyncStatus('online', '✅ Tersinkron • Real-time');
+                    isFirebaseReady = true;
+                }).catch(function(err) {
+                    console.error('❌ Gagal koneksi ke Firestore:', err);
+                    setSyncStatus('offline', '❌ Gagal terhubung: ' + err.message);
+                });
+
+                onSnapshot(collection(db, 'stok_items'), function(snap) {
+                    console.log('📦 Data stok_items diterima:', snap.size, 'item');
+                    stokItemsMap = {};
+                    snap.docs.forEach(function(d) { stokItemsMap[d.id] = d.data(); });
+                    isFirebaseReady = true;
+                    setSyncStatus('online', '✅ Tersinkron • Real-time');
+                    renderAll();
+                }, function(err) {
+                    console.error('❌ Error listener stok_items:', err);
+                });
+
+                onSnapshot(query(collection(db, 'stok_transaksi'), orderBy('createdAt', 'desc'), limit(50)), function(snap) {
+                    stokTransaksiList = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+                    renderAll();
+                }, function(err) {
+                    console.error('❌ Error listener stok_transaksi:', err);
+                });
+
+                onSnapshot(query(collection(db, 'pengeluaran'), orderBy('createdAt', 'desc')), function(snap) {
+                    pengeluaranList = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+                    renderAll();
+                }, function(err) {
+                    console.error('❌ Error listener pengeluaran:', err);
+                });
+
+                onSnapshot(query(collection(db, 'pendapatan'), orderBy('createdAt', 'desc')), function(snap) {
+                    pendapatanList = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+                    renderAll();
+                }, function(err) {
+                    console.error('❌ Error listener pendapatan:', err);
+                });
+
+                analyticsIsSupported().then(function(ok) { 
+                    if (ok) {
+                        try { getAnalytics(app); } catch(e) {}
+                    }
+                }).catch(function() {});
+
+            } catch (e) {
+                console.error('❌ Error inisialisasi Firebase:', e);
+                setSyncStatus('offline', '❌ Error: ' + e.message);
+            }
+        }
+
+        window.__toko = { 
+            submitStokMasuk: submitStokMasuk,
+            submitStokKeluar: submitStokKeluar,
+            submitPendapatan: submitPendapatan, // Sama dengan stok keluar
+            submitPengeluaran: submitPengeluaran,
+            getHargaForNama: getHargaFromFirestore,
+            isConfigured: isConfigured,
+            isReady: function() { return isFirebaseReady; },
+            fmtRupiah: fmtRupiah
+        };
+
+        window.currentMenu = 'dashboard';
+        window.renderAll = renderAll;
+        window.renderStokPage = renderStokPage;
+        window.renderPengeluaranPage = renderPengeluaranPage;
+        window.renderPendapatanPage = renderPendapatanPage;
+
+        console.log('✅ Firebase module selesai dimuat');
+    </script>
+
+    <!-- ===== SCRIPT UTAMA ===== -->
+    <script>
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        var pageData = {
+            dashboard: { title: 'Dashboard Toko', subtitle: 'Selamat datang! Ringkasan stok dan keuangan hari ini.' },
+            stok: { title: 'Manajemen Stok', subtitle: 'Kelola semua data stok barang toko Anda — tersinkron real-time.' },
+            pengeluaran: { title: 'Laporan Pengeluaran', subtitle: 'Kelola dan pantau semua pengeluaran toko — tersinkron real-time.' },
+            pendapatan: { title: 'Laporan Pendapatan', subtitle: 'Kelola dan pantau semua pendapatan toko — tersinkron real-time.' }
+        };
+
+        var sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+        var dashboardContent = document.getElementById('dashboardContent');
+        var pageContent = document.getElementById('pageContent');
+        var pageTitle = document.getElementById('pageTitle');
+        var pageSubtitle = document.getElementById('pageSubtitle');
+
+        function navigateTo(menu) {
+            sidebarLinks.forEach(function(link) {
+                link.classList.remove('active');
+                if (link.dataset.menu === menu) link.classList.add('active');
+            });
+
+            var data = pageData[menu];
+            if (!data) return;
+            window.currentMenu = menu;
+
+            pageTitle.textContent = data.title;
+            pageSubtitle.textContent = data.subtitle;
+
+            if (menu === 'dashboard') {
+                dashboardContent.style.display = 'block';
+                pageContent.style.display = 'none';
+                if (window.renderAll) window.renderAll();
+            } else {
+                dashboardContent.style.display = 'none';
+                pageContent.style.display = 'block';
+                if (menu === 'stok' && window.renderStokPage) window.renderStokPage();
+                if (menu === 'pengeluaran' && window.renderPengeluaranPage) window.renderPengeluaranPage();
+                if (menu === 'pendapatan' && window.renderPendapatanPage) window.renderPendapatanPage();
+            }
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        sidebarLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (link.dataset.menu) navigateTo(link.dataset.menu);
+            });
+        });
+
+        document.querySelectorAll('.action-link').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (link.dataset.menu) navigateTo(link.dataset.menu);
+            });
+        });
+
+        var themeToggle = document.getElementById('themeToggle');
+        var currentTheme = 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeToggle.addEventListener('click', function() {
+            currentTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        });
+
+        var hamburger = document.getElementById('hamburger');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('overlay');
+        function toggleSidebar() { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); }
+        hamburger.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+        window.addEventListener('resize', function() { if (window.innerWidth > 768) { sidebar.classList.remove('open'); overlay.classList.remove('active'); } });
+
+        // ===== MODAL =====
+        var modalOverlay = document.getElementById('modalOverlay');
+        var modalTitle = document.getElementById('modalTitle');
+        var modalForm = document.getElementById('modalForm');
+        var btnCancel = document.getElementById('btnCancel');
+        var btnSubmit = document.getElementById('btnSubmit');
+
+        // ===== TOMBOL ACTION =====
+        var btnStokMasuk = document.getElementById('btnStokMasuk');
+        var btnStokKeluar = document.getElementById('btnStokKeluar');
+        var btnPendapatan = document.getElementById('btnPendapatan');
+        var btnPengeluaran = document.getElementById('btnPengeluaran');
+
+        function fmtRupiahLocal(n) {
+            return 'Rp ' + Math.round(n || 0).toLocaleString('id-ID');
+        }
+
+        function openModal(menu, tipe) {
+            if (!window.__toko || !window.__toko.isConfigured) {
+                alert('⚠️ Firebase belum dikonfigurasi!\n\nSilakan isi firebaseConfig di dalam file HTML ini.');
+                return;
+            }
+
+            if (!window.__toko.isReady()) {
+                alert('⏳ Firebase sedang menghubungkan...\n\nTunggu beberapa saat hingga status di sidebar berubah menjadi "Tersinkron".');
+                return;
+            }
+
+            var titleMap = {
+                'stok_masuk': 'Tambah Stok Masuk',
+                'stok_keluar': 'Tambah Stok Keluar → Otomatis ke Pendapatan',
+                'pendapatan': 'Tambah Pendapatan (Mengurangi Stok)',
+                'pengeluaran': 'Tambah Pengeluaran'
+            };
+
+            var iconMap = {
+                'stok_masuk': 'fa-plus-circle',
+                'stok_keluar': 'fa-minus-circle',
+                'pendapatan': 'fa-coins',
+                'pengeluaran': 'fa-arrow-down'
+            };
+
+            var badgeMap = {
+                'stok_masuk': '<span class="modal-type-badge masuk">Stok Masuk</span>',
+                'stok_keluar': '<span class="modal-type-badge keluar">Stok Keluar</span>',
+                'pendapatan': '<span class="modal-type-badge pendapatan">Pendapatan</span>',
+                'pengeluaran': '<span class="modal-type-badge pengeluaran">Pengeluaran</span>'
+            };
+
+            modalTitle.innerHTML = '<i class="fas ' + iconMap[menu] + '"></i> ' + titleMap[menu] + ' ' + (badgeMap[menu] || '');
+            modalForm.dataset.menu = menu;
+            modalForm.dataset.tipe = tipe || '';
+
+            var fields = [];
+
+            if (menu === 'stok_masuk') {
+                fields = [
+                    { name: 'nama', label: 'Nama Barang', type: 'select', required: true, options: window.daftarNamaBarang },
+                    { name: 'jumlah', label: 'Jumlah Masuk', type: 'number', required: true, min: 1, placeholder: 'Masukkan jumlah...' },
+                    { name: 'harga', label: 'Harga Satuan (Rp) - Tidak Bisa Diubah', type: 'text', required: false, readonly: true }
+                ];
+            } else if (menu === 'stok_keluar' || menu === 'pendapatan') {
+                // ===== STOK KELUAR DAN PENDAPATAN IDENTIK =====
+                var titleLabel = menu === 'pendapatan' ? 'Jumlah Terjual' : 'Jumlah Keluar';
+                fields = [
+                    { name: 'nama', label: 'Nama Barang', type: 'select', required: true, options: window.daftarNamaBarang },
+                    { name: 'jumlah', label: titleLabel, type: 'number', required: true, min: 1, placeholder: 'Masukkan jumlah...' },
+                    { name: 'harga', label: 'Harga Satuan (Rp) - Tidak Bisa Diubah', type: 'text', required: false, readonly: true },
+                    { name: 'pendapatan_jumlah', label: '💰 Total Pendapatan (Otomatis)', type: 'text', required: false, readonly: true, helperText: 'Jumlah × Harga Satuan' },
+                    { name: 'deskripsi', label: '📝 Deskripsi (Opsional)', type: 'text', required: false, placeholder: 'Contoh: Penjualan hari Senin...' },
+                    { name: 'tanggal', label: 'Tanggal', type: 'date', required: false }
+                ];
+            } else if (menu === 'pengeluaran') {
+                fields = [
+                    { name: 'deskripsi', label: 'Deskripsi Pengeluaran', type: 'text', required: true, placeholder: 'Contoh: Beli bahan baku...' },
+                    { name: 'jumlah', label: 'Jumlah Pengeluaran (Rp)', type: 'number', required: true, min: 1, placeholder: 'Masukkan jumlah...' },
+                    { name: 'tanggal', label: 'Tanggal', type: 'date', required: false }
+                ];
+            }
+
+            modalForm.innerHTML = fields.map(function(f) {
+                var readonlyAttr = f.readonly ? ' readonly' : '';
+                var minAttr = f.min ? ' min="' + f.min + '"' : '';
+                var placeholderAttr = f.placeholder ? ' placeholder="' + f.placeholder + '"' : '';
+                var typeAttr = f.readonly ? 'text' : f.type;
+                var helperHtml = f.helperText ? '<div class="helper-text">' + f.helperText + '</div>' : '';
+                
+                if (f.type === 'select') {
+                    var opts = f.options.map(function(o) {
+                        var val = (o && typeof o === 'object') ? o.value : o;
+                        var label = (o && typeof o === 'object') ? o.label : o;
+                        return '<option value="' + val + '">' + label + '</option>';
+                    }).join('');
+                    return '<div class="form-group" data-field-group="' + f.name + '">' +
+                        '<label>' + f.label + '</label>' +
+                        '<select name="' + f.name + '" ' + (f.required ? 'required' : '') + '>' +
+                        '<option value="" disabled selected>Pilih barang...</option>' +
+                        opts +
+                        '</select>' +
+                        helperHtml +
+                        '</div>';
+                }
+                
+                var highlightClass = f.name === 'pendapatan_jumlah' ? ' field-highlight' : '';
+                
+                return '<div class="form-group" data-field-group="' + f.name + '">' +
+                    '<label>' + f.label + '</label>' +
+                    '<input type="' + typeAttr + '" name="' + f.name + '" class="' + highlightClass + '" ' + 
+                    (f.required ? 'required' : '') + minAttr + readonlyAttr + placeholderAttr + ' />' +
+                    helperHtml +
+                    '</div>';
+            }).join('');
+
+            // ===== AUTO-FILL HARGA DAN PENDAPATAN =====
+            var namaSelect = modalForm.querySelector('select[name="nama"]');
+            var hargaInput = modalForm.querySelector('input[name="harga"]');
+            var jumlahInput = modalForm.querySelector('input[name="jumlah"]');
+            var pendapatanInput = modalForm.querySelector('input[name="pendapatan_jumlah"]');
+            
+            function updateHargaAndPendapatan() {
+                if (!namaSelect || !hargaInput) return;
+                var harga = window.__toko.getHargaForNama(namaSelect.value);
+                if (harga > 0) {
+                    hargaInput.value = fmtRupiahLocal(harga);
+                    hargaInput.dataset.harga = harga;
+                    
+                    if ((menu === 'stok_keluar' || menu === 'pendapatan') && jumlahInput && pendapatanInput) {
+                        var qty = Number(jumlahInput.value) || 0;
+                        var total = qty * harga;
+                        if (total > 0) {
+                            pendapatanInput.value = fmtRupiahLocal(total);
+                            pendapatanInput.dataset.total = total;
+                        } else {
+                            pendapatanInput.value = '';
+                        }
+                    }
+                } else {
+                    hargaInput.value = 'Harga belum ditentukan';
+                    if (pendapatanInput) pendapatanInput.value = '';
+                }
+            }
+
+            if (namaSelect && hargaInput) {
+                setTimeout(updateHargaAndPendapatan, 200);
+                namaSelect.addEventListener('change', updateHargaAndPendapatan);
+            }
+
+            if (jumlahInput && pendapatanInput && (menu === 'stok_keluar' || menu === 'pendapatan')) {
+                jumlahInput.addEventListener('change', updateHargaAndPendapatan);
+                jumlahInput.addEventListener('input', updateHargaAndPendapatan);
+            }
+
+            modalOverlay.classList.add('active');
+        }
+
+        function closeModal() { modalOverlay.classList.remove('active'); modalForm.reset(); }
+
+        // ===== EVENT TOMBOL =====
+        btnStokMasuk.addEventListener('click', function() { openModal('stok_masuk'); });
+        btnStokKeluar.addEventListener('click', function() { openModal('stok_keluar'); });
+        btnPendapatan.addEventListener('click', function() { openModal('pendapatan'); });
+        btnPengeluaran.addEventListener('click', function() { openModal('pengeluaran'); });
+
+        btnCancel.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeModal(); });
+
+        // ===== SUBMIT FORM =====
+        modalForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var menu = modalForm.dataset.menu;
+            var fd = new FormData(modalForm);
+            var data = Object.fromEntries(fd.entries());
+            
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+            try {
+                if (menu === 'stok_masuk') {
+                    await window.__toko.submitStokMasuk(data);
+                    closeModal();
+                    console.log('✅ Stok masuk berhasil disimpan');
+                } else if (menu === 'stok_keluar') {
+                    var clamped = await window.__toko.submitStokKeluar(data);
+                    closeModal();
+                    if (clamped) {
+                        alert('⚠️ Stok keluar melebihi stok yang tersedia — stok barang ini otomatis diset ke 0.');
+                    }
+                    console.log('✅ Stok keluar berhasil disimpan');
+                } else if (menu === 'pendapatan') {
+                    // ===== PENDAPATAN - IDENTIK DENGAN STOK KELUAR =====
+                    var clamped = await window.__toko.submitPendapatan(data);
+                    closeModal();
+                    if (clamped) {
+                        alert('⚠️ Stok keluar melebihi stok yang tersedia — stok barang ini otomatis diset ke 0.');
+                    }
+                    console.log('✅ Pendapatan berhasil disimpan (stok berkurang)');
+                } else if (menu === 'pengeluaran') {
+                    await window.__toko.submitPengeluaran(data);
+                    closeModal();
+                    console.log('✅ Pengeluaran berhasil disimpan');
+                }
+            } catch (err) {
+                console.error('❌ Error menyimpan data:', err);
+                alert('❌ Gagal menyimpan data: ' + err.message);
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="fas fa-check"></i> Simpan';
+            }
+        });
+
+        console.log('✅ Script utama loaded');
+        console.log('📋 Daftar barang:', window.daftarNamaBarang);
+    </script>
+
+</body>
+</html>
