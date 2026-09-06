@@ -2,10 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Dashboard Toko - Firebase Sync</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -30,6 +30,9 @@
             --danger: #ef4444;
             --radius: 14px;
             --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --qris-color: #1a8c4a;
+            --online-color: #2563eb;
+            --cash-color: #d97706;
         }
 
         [data-theme="dark"] {
@@ -53,6 +56,7 @@
             display: flex;
             min-height: 100vh;
             transition: background var(--transition), color var(--transition);
+            -webkit-tap-highlight-color: transparent;
         }
 
         .sidebar {
@@ -105,7 +109,7 @@
         .page-header h2 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
         .page-header .subtitle { color: var(--text-secondary); font-size: 14px; font-weight: 400; margin-top: 2px; }
         .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-        .header-actions .date-badge { background: var(--card-bg); padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow); border: 1px solid var(--border-color); color: var(--text-secondary); }
+        .header-actions .date-badge { background: var(--card-bg); padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow); border: 1px solid var(--border-color); color: var(--text-secondary); white-space: nowrap; }
         .btn-primary { background: var(--accent-gradient); border: none; padding: 9px 22px; border-radius: 30px; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 6px 20px rgba(79,70,229,0.3); display: flex; align-items: center; gap: 8px; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(79,70,229,0.4); }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
@@ -139,10 +143,10 @@
         .card-header h3 i { color: var(--accent); }
         .card-header .action-link { color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
 
-        .table-wrap { overflow-x: auto; }
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         table th { text-align: left; padding: 10px 8px 10px 0; color: var(--text-secondary); font-weight: 600; border-bottom: 2px solid var(--border-color); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-        table td { padding: 12px 8px 12px 0; border-bottom: 1px solid var(--border-color); }
+        table td { padding: 12px 8px 12px 0; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
         table tr:last-child td { border-bottom: none; }
         .status-badge { padding: 3px 12px; border-radius: 30px; font-size: 11px; font-weight: 600; }
         .status-badge.in-stock { background: rgba(16,185,129,0.12); color: var(--success); }
@@ -169,10 +173,36 @@
         .empty-state h4 { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
         .empty-state p { font-size: 14px; }
 
-        .activity-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        .activity-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 10px 0; 
+            border-bottom: 1px solid var(--border-color); 
+            font-size: 13px; 
+            flex-wrap: wrap;
+        }
         .activity-item:last-child { border-bottom: none; }
-        .activity-item i { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-        .activity-item .a-text { flex: 1; }
+        .activity-item .a-icon { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 14px; 
+            flex-shrink: 0; 
+        }
+        .activity-item .a-icon.income { background: rgba(16,185,129,0.12); color: var(--success); }
+        .activity-item .a-icon.expense { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .activity-item .a-icon.stock-in { background: rgba(79,70,229,0.12); color: var(--accent); }
+        .activity-item .a-icon.stock-out { background: rgba(245,158,11,0.12); color: var(--warning); }
+        .activity-item .a-text { flex: 1; min-width: 100px; }
+        .activity-item .a-text .a-title { font-weight: 600; font-size: 13px; }
+        .activity-item .a-text .a-desc { font-size: 12px; color: var(--text-secondary); }
+        .activity-item .a-amount { font-weight: 700; font-size: 14px; white-space: nowrap; }
+        .activity-item .a-amount.positive { color: var(--success); }
+        .activity-item .a-amount.negative { color: var(--danger); }
         .activity-item .a-time { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
 
         /* Modal */
@@ -196,7 +226,6 @@
         .setup-banner strong { display: block; margin-bottom: 6px; font-size: 14px; }
         .setup-banner code { background: rgba(0,0,0,0.15); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
 
-        /* Modal type badge */
         .modal-type-badge { display: inline-block; padding: 4px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; margin-left: 10px; }
         .modal-type-badge.masuk { background: rgba(16,185,129,0.15); color: var(--success); }
         .modal-type-badge.keluar { background: rgba(239,68,68,0.15); color: var(--danger); }
@@ -206,25 +235,177 @@
         .field-highlight { border-color: var(--success) !important; background: rgba(16,185,129,0.05) !important; }
         .field-highlight:focus { border-color: var(--success) !important; box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
 
+        /* Filter */
+        .filter-section { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; padding: 12px 16px; background: var(--bg-primary); border-radius: 10px; }
+        .filter-section label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+        .filter-section input, .filter-section select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); font-family: inherit; font-size: 13px; }
+        .filter-section input:focus, .filter-section select:focus { outline: none; border-color: var(--accent); }
+        .filter-section .filter-btn { padding: 8px 16px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-weight: 600; font-size: 12px; cursor: pointer; transition: background 0.2s; }
+        .filter-section .filter-btn:hover { background: var(--accent-light); }
+
+        /* ===== TOTAL HARI INI ===== */
+        .today-total-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: var(--radius);
+            padding: 24px 30px;
+            margin-bottom: 24px;
+            color: #fff;
+            box-shadow: 0 12px 40px rgba(16, 185, 129, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+        .today-total-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .today-total-card .today-label {
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+        .today-total-card .today-label i { font-size: 18px; }
+        .today-total-card .today-value {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+        .today-total-card .today-date {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        .today-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+        }
+        .today-details .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+        }
+        .today-details .detail-item .d-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: space-between;
+        }
+        .today-details .detail-item .d-icon {
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+        }
+        .today-details .detail-item .d-label {
+            font-size: 11px;
+            opacity: 0.8;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .today-details .detail-item .d-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .today-details .detail-item .d-edit-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .today-details .detail-item .d-edit-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .summary-card { background: var(--card-bg); padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .summary-card .s-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+        .summary-card .s-value { font-size: 20px; font-weight: 800; color: var(--success); }
+        .summary-card .s-value.danger { color: var(--danger); }
+
+        .payment-tag {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .payment-tag.cash { background: rgba(217, 119, 6, 0.15); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.2); }
+        .payment-tag.qris { background: rgba(26, 140, 74, 0.15); color: #1a8c4a; border: 1px solid rgba(26, 140, 74, 0.2); }
+        .payment-tag.online { background: rgba(37, 99, 235, 0.15); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+        .payment-tag.none { background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px dashed #9ca3af; }
+
         @media (max-width: 1024px) {
             .stats-grid { grid-template-columns: repeat(3, 1fr); }
             .two-col { grid-template-columns: 1fr; }
-            .action-buttons { flex-direction: column; width: 100%; }
-            .action-buttons .btn-primary,
-            .action-buttons .btn-success,
-            .action-buttons .btn-danger,
-            .action-buttons .btn-warning { width: 100%; justify-content: center; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .today-details { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); width: 270px; }
+            .sidebar { transform: translateX(-100%); width: 280px; }
             .sidebar.open { transform: translateX(0); }
-            .main-content { margin-left: 0; padding: 18px; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .main-content { margin-left: 0; padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
             .page-header h2 { font-size: 20px; }
             .header-actions .date-badge { display: none; }
             .hamburger { display: flex !important; }
+            .filter-section { flex-direction: column; align-items: stretch; }
+            .filter-section .filter-btn { width: 100%; }
+            .today-total-card { padding: 18px 20px; }
+            .today-total-card .today-value { font-size: 30px; }
+            .today-details { grid-template-columns: 1fr; gap: 10px; }
+            .today-details .detail-item { padding: 10px 12px; }
+            .action-buttons { flex-direction: column; width: 100%; }
+            .action-buttons .btn { width: 100%; justify-content: center; }
+            .modal-box { padding: 20px; margin: 10px; }
+            .two-col { gap: 16px; }
+            .card { padding: 16px 18px; }
+            .stat-card { padding: 16px; }
+            .stat-card .stat-value { font-size: 20px; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .activity-item { flex-wrap: wrap; gap: 8px; }
+            .activity-item .a-text { min-width: 100%; }
+            .activity-item .a-amount { font-size: 16px; }
+            table { font-size: 12px; }
+            table th, table td { padding: 8px 4px; }
+            .payment-tag { font-size: 10px; padding: 2px 8px; }
+            .today-total-card .today-label { font-size: 12px; }
+            .today-details .detail-item .d-value { font-size: 16px; }
         }
-        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) { 
+            .stats-grid { grid-template-columns: 1fr; }
+            .today-total-card .today-value { font-size: 26px; }
+            .page-header h2 { font-size: 18px; }
+            .main-content { padding: 12px; }
+            .modal-box { padding: 16px; }
+        }
 
         .hamburger { display: none; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px; font-size: 18px; cursor: pointer; color: var(--text-primary); box-shadow: var(--shadow); align-items: center; gap: 8px; }
         .hamburger span { font-size: 13px; font-weight: 600; }
@@ -281,12 +462,7 @@
             <div class="header-actions">
                 <span class="date-badge"><i class="far fa-calendar-alt"></i> <span id="currentDate"></span></span>
                 <button class="hamburger" id="hamburger"><i class="fas fa-bars"></i> <span>Menu</span></button>
-                <div class="action-buttons">
-                    <button class="btn-success" id="btnStokMasuk"><i class="fas fa-plus-circle"></i> Stok Masuk</button>
-                    <button class="btn-danger" id="btnStokKeluar"><i class="fas fa-minus-circle"></i> Stok Keluar</button>
-                    <button class="btn-warning" id="btnPendapatan"><i class="fas fa-coins"></i> Pendapatan</button>
-                    <button class="btn-primary" id="btnPengeluaran"><i class="fas fa-arrow-down"></i> Pengeluaran</button>
-                </div>
+                <div class="action-buttons" id="actionButtons"></div>
             </div>
         </div>
 
@@ -385,6 +561,24 @@
         </div>
     </div>
 
+    <!-- ===== MODAL EDIT NOMINAL PER METODE ===== -->
+    <div class="modal-overlay" id="modalEditNominal">
+        <div class="modal-box">
+            <h3 id="editNominalTitle"><i class="fas fa-edit"></i> Edit Nominal</h3>
+            <form id="formEditNominal">
+                <div id="editNominalInfo" style="font-size:12px;color:var(--text-muted);margin-bottom:14px;background:var(--bg-primary);padding:10px 14px;border-radius:8px;"></div>
+                <div class="form-group">
+                    <label id="editNominalLabel">Masukkan Nominal</label>
+                    <input type="number" id="editNominalInput" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);font-family:inherit;font-size:16px;font-weight:700;" placeholder="Masukkan nominal..." />
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="btnNominalCancel">Batal</button>
+                    <button type="submit" class="btn-primary" id="btnNominalSave"><i class="fas fa-save"></i> Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // =====================================================================
         // DAFTAR NAMA BARANG
@@ -436,7 +630,7 @@
         import {
             getFirestore, collection, addDoc, deleteDoc, doc,
             onSnapshot, query, orderBy, serverTimestamp,
-            runTransaction, limit, getDocs
+            runTransaction, limit, getDocs, updateDoc
         } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
         console.log('🔥 Mulai inisialisasi Firebase...');
@@ -522,14 +716,71 @@
             });
         }
 
+        function getDateKey(ts) {
+            try {
+                var d = ts?.toDate ? ts.toDate() : new Date(ts);
+                return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            } catch (e) { return null; }
+        }
+
+        function getMonthKey(ts) {
+            try {
+                var d = ts?.toDate ? ts.toDate() : new Date(ts);
+                return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            } catch (e) { return null; }
+        }
+
+        function timeAgo(ts) {
+            try {
+                var d = ts?.toDate ? ts.toDate() : new Date(ts);
+                var diff = Math.floor((Date.now() - d.getTime()) / 1000);
+                if (diff < 60) return 'baru saja';
+                if (diff < 3600) return Math.floor(diff / 60) + ' menit lalu';
+                if (diff < 86400) return Math.floor(diff / 3600) + ' jam lalu';
+                if (diff < 604800) return Math.floor(diff / 86400) + ' hari lalu';
+                return Math.floor(diff / 86400) + ' hari lalu';
+            } catch (e) { return ''; }
+        }
+
         function renderAll() {
             if (!isFirebaseReady) return;
             renderBadge();
             renderDashboard();
+            renderActionButtons();
+            renderActivity();
             var menu = window.currentMenu || 'dashboard';
             if (menu === 'stok') renderStokPage();
             if (menu === 'pengeluaran') renderPengeluaranPage();
             if (menu === 'pendapatan') renderPendapatanPage();
+        }
+
+        function renderActionButtons() {
+            var container = document.getElementById('actionButtons');
+            var menu = window.currentMenu || 'dashboard';
+            var html = '';
+            if (menu === 'dashboard') {
+                html = `
+                    <button class="btn-success" id="btnStokMasuk"><i class="fas fa-plus-circle"></i> Stok Masuk</button>
+                    <button class="btn-danger" id="btnStokKeluar"><i class="fas fa-minus-circle"></i> Stok Keluar</button>
+                    <button class="btn-warning" id="btnPendapatan"><i class="fas fa-coins"></i> Pendapatan</button>
+                    <button class="btn-primary" id="btnPengeluaran"><i class="fas fa-arrow-down"></i> Pengeluaran</button>
+                `;
+            } else if (menu === 'stok') {
+                html = `
+                    <button class="btn-success" id="btnStokMasuk"><i class="fas fa-plus-circle"></i> Stok Masuk</button>
+                    <button class="btn-danger" id="btnStokKeluar"><i class="fas fa-minus-circle"></i> Stok Keluar</button>
+                `;
+            } else if (menu === 'pendapatan') {
+                html = `
+                    <button class="btn-warning" id="btnPendapatan"><i class="fas fa-coins"></i> Tambah Pendapatan</button>
+                `;
+            } else if (menu === 'pengeluaran') {
+                html = `
+                    <button class="btn-primary" id="btnPengeluaran"><i class="fas fa-arrow-down"></i> Tambah Pengeluaran</button>
+                `;
+            }
+            container.innerHTML = html;
+            attachButtonEvents();
         }
 
         function renderBadge() {
@@ -585,6 +836,125 @@
             return { cls: 'in-stock', label: 'Tersedia' };
         }
 
+        // ===== AKTIVITAS TERBARU - CASHFLOW =====
+        function renderActivity() {
+            var today = new Date().toISOString().slice(0, 10);
+            
+            var todayPendapatan = pendapatanList.filter(function(p) {
+                return getDateKey(p.createdAt || p.tanggal) === today;
+            });
+            
+            var todayPengeluaran = pengeluaranList.filter(function(p) {
+                return getDateKey(p.createdAt || p.tanggal) === today;
+            });
+            
+            var todayStok = stokTransaksiList.filter(function(s) {
+                return getDateKey(s.createdAt) === today;
+            });
+            
+            var allActivity = [];
+            
+            todayPendapatan.forEach(function(p) {
+                allActivity.push({
+                    type: 'income',
+                    title: 'Pendapatan',
+                    desc: p.deskripsi || 'Pendapatan',
+                    amount: Number(p.jumlah) || 0,
+                    time: p.createdAt,
+                    icon: 'fa-arrow-up',
+                    iconClass: 'income'
+                });
+            });
+            
+            todayPengeluaran.forEach(function(p) {
+                allActivity.push({
+                    type: 'expense',
+                    title: 'Pengeluaran',
+                    desc: p.deskripsi || 'Pengeluaran',
+                    amount: -Number(p.jumlah) || 0,
+                    time: p.createdAt,
+                    icon: 'fa-arrow-down',
+                    iconClass: 'expense'
+                });
+            });
+            
+            todayStok.forEach(function(s) {
+                var isMasuk = s.tipe === 'masuk';
+                allActivity.push({
+                    type: isMasuk ? 'stock-in' : 'stock-out',
+                    title: isMasuk ? 'Stok Masuk' : 'Stok Keluar',
+                    desc: s.nama + ' (' + s.jumlah + ' pcs)',
+                    amount: isMasuk ? Number(s.jumlah) : -Number(s.jumlah),
+                    time: s.createdAt,
+                    icon: isMasuk ? 'fa-boxes' : 'fa-box',
+                    iconClass: isMasuk ? 'stock-in' : 'stock-out'
+                });
+            });
+            
+            allActivity.sort(function(a, b) {
+                var da = a.time?.toDate ? a.time.toDate() : new Date(a.time);
+                var db = b.time?.toDate ? b.time.toDate() : new Date(b.time);
+                return db - da;
+            });
+            
+            allActivity = allActivity.slice(0, 10);
+            
+            var wrap = document.getElementById('activityWrap');
+            if (allActivity.length === 0) {
+                wrap.innerHTML = `
+                    <div class="empty-state" style="padding:20px;">
+                        <i class="fas fa-inbox" style="font-size:32px;"></i>
+                        <h4>Belum Ada Aktivitas Hari Ini</h4>
+                        <p style="font-size:13px;">Mulai transaksi pertama Anda hari ini.</p>
+                    </div>`;
+                return;
+            }
+            
+            var totalIncome = 0;
+            var totalExpense = 0;
+            
+            var html = allActivity.map(function(a) {
+                var amountClass = a.amount >= 0 ? 'positive' : 'negative';
+                var amountStr = a.amount >= 0 ? '+' + fmtRupiah(a.amount) : fmtRupiah(a.amount);
+                if (a.type === 'expense') amountStr = '-' + fmtRupiah(Math.abs(a.amount));
+                if (a.type === 'stock-in') amountStr = '+' + fmtRupiah(a.amount);
+                if (a.type === 'stock-out') amountStr = '-' + fmtRupiah(Math.abs(a.amount));
+                
+                if (a.amount > 0 && (a.type === 'income' || a.type === 'stock-in')) totalIncome += a.amount;
+                if (a.amount < 0 || a.type === 'expense' || a.type === 'stock-out') totalExpense += Math.abs(a.amount);
+                
+                return `
+                    <div class="activity-item">
+                        <div class="a-icon ${a.iconClass}"><i class="fas ${a.icon}"></i></div>
+                        <div class="a-text">
+                            <div class="a-title">${a.title}</div>
+                            <div class="a-desc">${escapeHtml(a.desc)}</div>
+                        </div>
+                        <div class="a-amount ${amountClass}">${amountStr}</div>
+                        <div class="a-time">${timeAgo(a.time)}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            var summaryHtml = `
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:2px solid var(--border-color);margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+                    <div style="font-weight:600;font-size:14px;">
+                        <i class="fas fa-coins" style="color:var(--success);"></i> Masuk: ${fmtRupiah(totalIncome)}
+                    </div>
+                    <div style="font-weight:600;font-size:14px;">
+                        <i class="fas fa-arrow-down" style="color:var(--danger);"></i> Keluar: ${fmtRupiah(totalExpense)}
+                    </div>
+                    <div style="font-weight:700;font-size:15px;color:${(totalIncome - totalExpense) >= 0 ? 'var(--success)' : 'var(--danger)'};">
+                        <i class="fas fa-${(totalIncome - totalExpense) >= 0 ? 'arrow-up' : 'arrow-down'}"></i> 
+                        Saldo: ${fmtRupiah(totalIncome - totalExpense)}
+                    </div>
+                </div>
+            `;
+            
+            wrap.innerHTML = summaryHtml + html;
+        }
+
+        // ===== HALAMAN STOK =====
         function renderStokPage() {
             var stokList = getStokList();
             var tr = stokList.map(function(s) {
@@ -600,6 +970,7 @@
             document.getElementById('pageContent').innerHTML = rows;
         }
 
+        // ===== HALAMAN PENGELUARAN =====
         function renderPengeluaranPage() {
             var rows;
             if (pengeluaranList.length === 0) {
@@ -613,31 +984,261 @@
                         '<td><button class="row-action" data-del="pengeluaran" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td>' +
                         '</tr>';
                 }).join('');
-                rows = '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
+                var total = pengeluaranList.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+                rows = '<div style="margin-bottom:16px;padding:14px;background:var(--bg-primary);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+                    '<span style="font-weight:600;">Total Pengeluaran</span>' +
+                    '<span style="font-weight:800;color:var(--danger);font-size:20px;">' + fmtRupiah(total) + '</span>' +
+                    '</div>' +
+                    '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
             }
             document.getElementById('pageContent').innerHTML = rows;
             attachDeleteHandlers();
         }
 
+        // ===== HALAMAN PENDAPATAN =====
         function renderPendapatanPage() {
+            var today = new Date().toISOString().slice(0, 10);
+            var filterType = document.getElementById('filterType')?.value || 'day';
+            var filterDate = document.getElementById('filterDate')?.value || today;
+            
+            var filtered = pendapatanList.filter(function(p) {
+                var dateKey = getDateKey(p.createdAt || p.tanggal);
+                var monthKey = getMonthKey(p.createdAt || p.tanggal);
+                if (filterType === 'day') {
+                    return dateKey === filterDate;
+                } else {
+                    return monthKey === filterDate;
+                }
+            });
+
+            var totalFiltered = filtered.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+
+            // ===== TOTAL HARI INI =====
+            var todayData = pendapatanList.filter(function(p) {
+                return getDateKey(p.createdAt || p.tanggal) === today;
+            });
+
+            var totalHariIni = todayData.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+
+            // Hitung per metode
+            var qrisTotal = todayData.filter(function(p) { return p.metode === 'qris'; }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+            var onlineTotal = todayData.filter(function(p) { return p.metode === 'online'; }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+            var cashTotal = todayData.filter(function(p) { return p.metode === 'cash'; }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+            var otherTotal = todayData.filter(function(p) { return !p.metode || (p.metode !== 'qris' && p.metode !== 'online' && p.metode !== 'cash'); }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+
+            var todayDateFormatted = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            // ===== CARD TOTAL HARI INI =====
+            var todayCardHtml = `
+                <div class="today-total-card">
+                    <div class="today-label">
+                        <i class="fas fa-calendar-day"></i> TOTAL PENDAPATAN HARI INI
+                    </div>
+                    <div class="today-value">${fmtRupiah(totalHariIni)}</div>
+                    <div class="today-date"><i class="far fa-calendar-alt"></i> ${todayDateFormatted}</div>
+                    <div class="today-details">
+                        <div class="detail-item">
+                            <div class="d-header">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div class="d-icon"><i class="fas fa-qrcode"></i></div>
+                                    <span class="d-label">QRIS</span>
+                                </div>
+                                <button class="d-edit-btn" onclick="openEditNominalModal('qris', ${qrisTotal})">✏️ Edit</button>
+                            </div>
+                            <div class="d-value" id="display_qris">${fmtRupiah(qrisTotal)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="d-header">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div class="d-icon"><i class="fas fa-wifi"></i></div>
+                                    <span class="d-label">Online</span>
+                                </div>
+                                <button class="d-edit-btn" onclick="openEditNominalModal('online', ${onlineTotal})">✏️ Edit</button>
+                            </div>
+                            <div class="d-value" id="display_online">${fmtRupiah(onlineTotal)}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="d-header">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div class="d-icon"><i class="fas fa-money-bill-wave"></i></div>
+                                    <span class="d-label">Cash</span>
+                                </div>
+                                <button class="d-edit-btn" onclick="openEditNominalModal('cash', ${cashTotal})">✏️ Edit</button>
+                            </div>
+                            <div class="d-value" id="display_cash">${fmtRupiah(cashTotal)}</div>
+                        </div>
+                    </div>
+                    ${otherTotal > 0 ? `<div style="margin-top:10px;font-size:12px;opacity:0.8;">+ Lainnya: ${fmtRupiah(otherTotal)}</div>` : ''}
+                </div>
+            `;
+
+            var monthlyTotal = pendapatanList.filter(function(p) {
+                return getMonthKey(p.createdAt || p.tanggal) === today.slice(0, 7);
+            }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+
+            var summaryHtml = `
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="s-label">📆 Total Bulan Ini</div>
+                        <div class="s-value">${fmtRupiah(monthlyTotal)}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="s-label">📊 Total ${filterType === 'day' ? 'Tanggal' : 'Bulan'} Terpilih</div>
+                        <div class="s-value">${fmtRupiah(totalFiltered)}</div>
+                    </div>
+                </div>
+            `;
+
+            var filterHtml = `
+                <div class="filter-section">
+                    <label>Tampilkan:</label>
+                    <select id="filterType" onchange="applyFilter()">
+                        <option value="day" ${filterType === 'day' ? 'selected' : ''}>Per Hari</option>
+                        <option value="month" ${filterType === 'month' ? 'selected' : ''}>Per Bulan</option>
+                    </select>
+                    <input type="${filterType === 'day' ? 'date' : 'month'}" id="filterDate" value="${filterDate}" onchange="applyFilter()" />
+                    <button class="filter-btn" onclick="applyFilter()"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="filter-btn" onclick="resetFilter()" style="background:var(--text-muted);"><i class="fas fa-undo"></i> Reset</button>
+                </div>
+            `;
+
             var rows;
-            if (pendapatanList.length === 0) {
-                rows = '<div class="empty-state"><i class="fas fa-coins"></i><h4>Belum Ada Pendapatan</h4></div>';
+            if (filtered.length === 0) {
+                rows = '<div class="empty-state"><i class="fas fa-coins"></i><h4>Tidak ada pendapatan</h4></div>';
             } else {
-                var tr = pendapatanList.map(function(p) {
+                var tr = filtered.map(function(p) {
                     var fromStok = p.fromStokKeluar ? ' (dari stok keluar)' : '';
+                    var metode = p.metode || 'cash';
+                    var metodeClass = metode === 'qris' ? 'qris' : (metode === 'online' ? 'online' : 'cash');
+                    var metodeLabel = metode === 'qris' ? 'QRIS' : (metode === 'online' ? 'Online' : 'Cash');
+                    var metodeHtml = `<span class="payment-tag ${metodeClass}">${metodeLabel}</span>`;
                     return '<tr>' +
                         '<td>' + escapeHtml(p.deskripsi) + fromStok + '</td>' +
                         '<td>' + (p.tanggal || '-') + '</td>' +
+                        '<td>' + metodeHtml + '</td>' +
                         '<td style="color:var(--success);font-weight:700;">' + fmtRupiah(p.jumlah) + '</td>' +
                         '<td><button class="row-action" data-del="pendapatan" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td>' +
                         '</tr>';
                 }).join('');
-                rows = '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
+                rows = '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Metode</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
             }
-            document.getElementById('pageContent').innerHTML = rows;
+
+            document.getElementById('pageContent').innerHTML = todayCardHtml + summaryHtml + filterHtml + rows;
             attachDeleteHandlers();
+
+            window._filterType = filterType;
+            window._filterDate = filterDate;
         }
+
+        // ===== FUNGSI FILTER =====
+        window.applyFilter = function() {
+            var filterType = document.getElementById('filterType')?.value || 'day';
+            var filterDate = document.getElementById('filterDate')?.value || new Date().toISOString().slice(0, 10);
+            window._filterType = filterType;
+            window._filterDate = filterDate;
+            renderPendapatanPage();
+        };
+
+        window.resetFilter = function() {
+            var today = new Date().toISOString().slice(0, 10);
+            document.getElementById('filterType').value = 'day';
+            document.getElementById('filterDate').value = today;
+            window._filterType = 'day';
+            window._filterDate = today;
+            renderPendapatanPage();
+        };
+
+        // =====================================================================
+        // EDIT NOMINAL PER METODE
+        // =====================================================================
+        var editNominalData = { metode: '', currentTotal: 0 };
+
+        window.openEditNominalModal = function(metode, currentTotal) {
+            editNominalData.metode = metode;
+            editNominalData.currentTotal = currentTotal;
+            
+            var labelMap = {
+                'qris': 'QRIS',
+                'online': 'Online',
+                'cash': 'Cash'
+            };
+            
+            document.getElementById('editNominalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Nominal ' + labelMap[metode];
+            document.getElementById('editNominalLabel').textContent = 'Masukkan nominal baru untuk ' + labelMap[metode];
+            document.getElementById('editNominalInfo').innerHTML = 'Saat ini: <strong>' + fmtRupiah(currentTotal) + '</strong>';
+            document.getElementById('editNominalInput').value = currentTotal;
+            document.getElementById('editNominalInput').placeholder = 'Masukkan nominal...';
+            
+            document.getElementById('modalEditNominal').classList.add('active');
+        };
+
+        document.getElementById('btnNominalCancel').addEventListener('click', function() {
+            document.getElementById('modalEditNominal').classList.remove('active');
+        });
+
+        document.getElementById('modalEditNominal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+
+        document.getElementById('formEditNominal').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            var nominal = parseInt(document.getElementById('editNominalInput').value);
+            if (!nominal || nominal < 0) {
+                alert('Masukkan nominal yang valid!');
+                return;
+            }
+            
+            var metode = editNominalData.metode;
+            var currentTotal = editNominalData.currentTotal;
+            
+            if (nominal === currentTotal) {
+                alert('Nominal sama dengan yang sekarang.');
+                document.getElementById('modalEditNominal').classList.remove('active');
+                return;
+            }
+            
+            var today = new Date().toISOString().slice(0, 10);
+            var todayData = pendapatanList.filter(function(p) {
+                return getDateKey(p.createdAt || p.tanggal) === today && p.metode === metode;
+            });
+            
+            if (todayData.length === 0) {
+                alert('Tidak ada data dengan metode ' + metode + ' untuk hari ini.');
+                document.getElementById('modalEditNominal').classList.remove('active');
+                return;
+            }
+            
+            var labelMap = {
+                'qris': 'QRIS',
+                'online': 'Online',
+                'cash': 'Cash'
+            };
+            
+            var confirmMsg = 'Update nominal ' + labelMap[metode] + ' dari ' + fmtRupiah(currentTotal) + ' menjadi ' + fmtRupiah(nominal) + '?\n\n' +
+                todayData.length + ' transaksi akan diupdate secara proporsional.';
+            if (!confirm(confirmMsg)) return;
+            
+            try {
+                var promises = todayData.map(function(p) {
+                    var proporsi = currentTotal > 0 ? Number(p.jumlah) / currentTotal : 1 / todayData.length;
+                    var newJumlah = Math.round(nominal * proporsi);
+                    if (newJumlah < 0) newJumlah = 0;
+                    var docRef = doc(db, 'pendapatan', p.id);
+                    return updateDoc(docRef, { jumlah: newJumlah });
+                });
+                
+                await Promise.all(promises);
+                document.getElementById('modalEditNominal').classList.remove('active');
+                renderPendapatanPage();
+                console.log('✅ Nominal ' + labelMap[metode] + ' diupdate menjadi:', nominal);
+            } catch (err) {
+                console.error('❌ Gagal update:', err);
+                alert('Gagal update: ' + err.message);
+            }
+        });
 
         function attachDeleteHandlers() {
             document.querySelectorAll('[data-del]').forEach(function(btn) {
@@ -656,7 +1257,7 @@
         }
 
         // =====================================================================
-        // SUBMIT FUNCTIONS
+        // SUBMIT FUNCTIONS - OTOMATIS METODE CASH
         // =====================================================================
         async function submitStokMasuk(data) {
             var nama = data.nama;
@@ -689,7 +1290,7 @@
             return true;
         }
 
-        // ===== FUNGSI STOK KELUAR & PENDAPATAN (IDENTIK) =====
+        // ===== STOK KELUAR - OTOMATIS CASH =====
         async function submitStokKeluar(data) {
             var nama = data.nama;
             var jumlahInput = Number(data.jumlah);
@@ -712,7 +1313,6 @@
                 tx.set(itemRef, payload, { merge: true });
             });
 
-            // Catat riwayat stok keluar
             await addDoc(collection(db, 'stok_transaksi'), {
                 nama: nama, 
                 tipe: 'keluar', 
@@ -721,7 +1321,34 @@
                 createdAt: serverTimestamp()
             });
 
-            // ===== TAMBAHKAN KE PENDAPATAN =====
+            if (hargaSatuan > 0) {
+                var totalPendapatan = jumlahInput * hargaSatuan;
+                var pendapatanDeskripsi = data.deskripsi || 'Penjualan ' + nama + ' (' + jumlahInput + ' pcs @ ' + fmtRupiah(hargaSatuan) + ')';
+                
+                await addDoc(collection(db, 'pendapatan'), {
+                    deskripsi: pendapatanDeskripsi,
+                    jumlah: totalPendapatan,
+                    tanggal: new Date().toISOString().slice(0, 10),
+                    createdAt: serverTimestamp(),
+                    fromStokKeluar: true,
+                    barang: nama,
+                    jumlahBarang: jumlahInput,
+                    hargaSatuan: hargaSatuan,
+                    metode: 'cash'  // <-- OTOMATIS CASH
+                });
+                
+                console.log('💰 Pendapatan dari stok keluar (Cash):', pendapatanDeskripsi, '=', fmtRupiah(totalPendapatan));
+            }
+
+            return clamped;
+        }
+
+        // ===== PENDAPATAN MANUAL - OTOMATIS CASH =====
+        async function submitPendapatan(data) {
+            var nama = data.nama;
+            var jumlahInput = Number(data.jumlah);
+            var hargaSatuan = getHargaFromFirestore(nama);
+
             if (hargaSatuan > 0) {
                 var totalPendapatan = jumlahInput * hargaSatuan;
                 var pendapatanDeskripsi = data.deskripsi || 'Penjualan ' + nama + ' (' + jumlahInput + ' pcs @ ' + fmtRupiah(hargaSatuan) + ')';
@@ -731,24 +1358,18 @@
                     jumlah: totalPendapatan,
                     tanggal: data.tanggal || new Date().toISOString().slice(0, 10),
                     createdAt: serverTimestamp(),
-                    fromStokKeluar: true,
+                    fromPendapatanManual: true,
                     barang: nama,
                     jumlahBarang: jumlahInput,
-                    hargaSatuan: hargaSatuan
+                    hargaSatuan: hargaSatuan,
+                    metode: 'cash'  // <-- OTOMATIS CASH
                 });
                 
-                console.log('💰 Pendapatan:', pendapatanDeskripsi, '=', fmtRupiah(totalPendapatan));
+                console.log('💰 Pendapatan manual (Cash):', pendapatanDeskripsi, '=', fmtRupiah(totalPendapatan));
+                return true;
+            } else {
+                throw new Error('Harga untuk barang "' + nama + '" belum ditentukan!');
             }
-
-            return clamped;
-        }
-
-        // ===== FUNGSI PENDAPATAN - IDENTIK DENGAN STOK KELUAR =====
-        // Fungsi ini sama persis dengan submitStokKeluar di atas
-        // Tapi kita bisa panggil submitStokKeluar langsung dari tombol pendapatan
-        async function submitPendapatan(data) {
-            // Panggil fungsi stok keluar yang sudah ada
-            return await submitStokKeluar(data);
         }
 
         async function submitPengeluaran(data) {
@@ -828,7 +1449,7 @@
         window.__toko = { 
             submitStokMasuk: submitStokMasuk,
             submitStokKeluar: submitStokKeluar,
-            submitPendapatan: submitPendapatan, // Sama dengan stok keluar
+            submitPendapatan: submitPendapatan,
             submitPengeluaran: submitPengeluaran,
             getHargaForNama: getHargaFromFirestore,
             isConfigured: isConfigured,
@@ -841,6 +1462,8 @@
         window.renderStokPage = renderStokPage;
         window.renderPengeluaranPage = renderPengeluaranPage;
         window.renderPendapatanPage = renderPendapatanPage;
+        window.renderActionButtons = renderActionButtons;
+        window.renderActivity = renderActivity;
 
         console.log('✅ Firebase module selesai dimuat');
     </script>
@@ -853,7 +1476,7 @@
             dashboard: { title: 'Dashboard Toko', subtitle: 'Selamat datang! Ringkasan stok dan keuangan hari ini.' },
             stok: { title: 'Manajemen Stok', subtitle: 'Kelola semua data stok barang toko Anda — tersinkron real-time.' },
             pengeluaran: { title: 'Laporan Pengeluaran', subtitle: 'Kelola dan pantau semua pengeluaran toko — tersinkron real-time.' },
-            pendapatan: { title: 'Laporan Pendapatan', subtitle: 'Kelola dan pantau semua pendapatan toko — tersinkron real-time.' }
+            pendapatan: { title: 'Laporan Pendapatan', subtitle: 'Lihat total pendapatan per hari dan per bulan — tersinkron real-time.' }
         };
 
         var sidebarLinks = document.querySelectorAll('.sidebar-menu a');
@@ -885,6 +1508,7 @@
                 if (menu === 'stok' && window.renderStokPage) window.renderStokPage();
                 if (menu === 'pengeluaran' && window.renderPengeluaranPage) window.renderPengeluaranPage();
                 if (menu === 'pendapatan' && window.renderPendapatanPage) window.renderPendapatanPage();
+                if (window.renderActionButtons) window.renderActionButtons();
             }
 
             if (window.innerWidth <= 768) {
@@ -923,18 +1547,12 @@
         overlay.addEventListener('click', toggleSidebar);
         window.addEventListener('resize', function() { if (window.innerWidth > 768) { sidebar.classList.remove('open'); overlay.classList.remove('active'); } });
 
-        // ===== MODAL =====
+        // ===== MODAL TAMBAH DATA =====
         var modalOverlay = document.getElementById('modalOverlay');
         var modalTitle = document.getElementById('modalTitle');
         var modalForm = document.getElementById('modalForm');
         var btnCancel = document.getElementById('btnCancel');
         var btnSubmit = document.getElementById('btnSubmit');
-
-        // ===== TOMBOL ACTION =====
-        var btnStokMasuk = document.getElementById('btnStokMasuk');
-        var btnStokKeluar = document.getElementById('btnStokKeluar');
-        var btnPendapatan = document.getElementById('btnPendapatan');
-        var btnPengeluaran = document.getElementById('btnPengeluaran');
 
         function fmtRupiahLocal(n) {
             return 'Rp ' + Math.round(n || 0).toLocaleString('id-ID');
@@ -953,8 +1571,8 @@
 
             var titleMap = {
                 'stok_masuk': 'Tambah Stok Masuk',
-                'stok_keluar': 'Tambah Stok Keluar → Otomatis ke Pendapatan',
-                'pendapatan': 'Tambah Pendapatan (Mengurangi Stok)',
+                'stok_keluar': 'Tambah Stok Keluar → Otomatis ke Pendapatan (Cash)',
+                'pendapatan': 'Tambah Pendapatan (Cash)',
                 'pengeluaran': 'Tambah Pengeluaran'
             };
 
@@ -967,14 +1585,13 @@
 
             var badgeMap = {
                 'stok_masuk': '<span class="modal-type-badge masuk">Stok Masuk</span>',
-                'stok_keluar': '<span class="modal-type-badge keluar">Stok Keluar</span>',
-                'pendapatan': '<span class="modal-type-badge pendapatan">Pendapatan</span>',
+                'stok_keluar': '<span class="modal-type-badge keluar">Stok Keluar → Cash</span>',
+                'pendapatan': '<span class="modal-type-badge pendapatan">Pendapatan Cash</span>',
                 'pengeluaran': '<span class="modal-type-badge pengeluaran">Pengeluaran</span>'
             };
 
             modalTitle.innerHTML = '<i class="fas ' + iconMap[menu] + '"></i> ' + titleMap[menu] + ' ' + (badgeMap[menu] || '');
             modalForm.dataset.menu = menu;
-            modalForm.dataset.tipe = tipe || '';
 
             var fields = [];
 
@@ -984,14 +1601,21 @@
                     { name: 'jumlah', label: 'Jumlah Masuk', type: 'number', required: true, min: 1, placeholder: 'Masukkan jumlah...' },
                     { name: 'harga', label: 'Harga Satuan (Rp) - Tidak Bisa Diubah', type: 'text', required: false, readonly: true }
                 ];
-            } else if (menu === 'stok_keluar' || menu === 'pendapatan') {
-                // ===== STOK KELUAR DAN PENDAPATAN IDENTIK =====
-                var titleLabel = menu === 'pendapatan' ? 'Jumlah Terjual' : 'Jumlah Keluar';
+            } else if (menu === 'stok_keluar') {
                 fields = [
                     { name: 'nama', label: 'Nama Barang', type: 'select', required: true, options: window.daftarNamaBarang },
-                    { name: 'jumlah', label: titleLabel, type: 'number', required: true, min: 1, placeholder: 'Masukkan jumlah...' },
+                    { name: 'jumlah', label: 'Jumlah Keluar', type: 'number', required: true, min: 1, placeholder: 'Masukkan jumlah...' },
                     { name: 'harga', label: 'Harga Satuan (Rp) - Tidak Bisa Diubah', type: 'text', required: false, readonly: true },
-                    { name: 'pendapatan_jumlah', label: '💰 Total Pendapatan (Otomatis)', type: 'text', required: false, readonly: true, helperText: 'Jumlah × Harga Satuan' },
+                    { name: 'pendapatan_jumlah', label: '💰 Total Pendapatan (Otomatis → Cash)', type: 'text', required: false, readonly: true, helperText: 'Jumlah × Harga Satuan' },
+                    { name: 'deskripsi', label: '📝 Deskripsi (Opsional)', type: 'text', required: false, placeholder: 'Contoh: Penjualan hari Senin...' },
+                    { name: 'tanggal', label: 'Tanggal', type: 'date', required: false }
+                ];
+            } else if (menu === 'pendapatan') {
+                fields = [
+                    { name: 'nama', label: 'Nama Barang', type: 'select', required: true, options: window.daftarNamaBarang },
+                    { name: 'jumlah', label: 'Jumlah Terjual', type: 'number', required: true, min: 1, placeholder: 'Masukkan jumlah...' },
+                    { name: 'harga', label: 'Harga Satuan (Rp) - Tidak Bisa Diubah', type: 'text', required: false, readonly: true },
+                    { name: 'pendapatan_jumlah', label: '💰 Total Pendapatan (Otomatis → Cash)', type: 'text', required: false, readonly: true, helperText: 'Jumlah × Harga Satuan' },
                     { name: 'deskripsi', label: '📝 Deskripsi (Opsional)', type: 'text', required: false, placeholder: 'Contoh: Penjualan hari Senin...' },
                     { name: 'tanggal', label: 'Tanggal', type: 'date', required: false }
                 ];
@@ -1036,7 +1660,7 @@
                     '</div>';
             }).join('');
 
-            // ===== AUTO-FILL HARGA DAN PENDAPATAN =====
+            // Auto-fill harga dan pendapatan
             var namaSelect = modalForm.querySelector('select[name="nama"]');
             var hargaInput = modalForm.querySelector('input[name="harga"]');
             var jumlahInput = modalForm.querySelector('input[name="jumlah"]');
@@ -1080,16 +1704,21 @@
 
         function closeModal() { modalOverlay.classList.remove('active'); modalForm.reset(); }
 
-        // ===== EVENT TOMBOL =====
-        btnStokMasuk.addEventListener('click', function() { openModal('stok_masuk'); });
-        btnStokKeluar.addEventListener('click', function() { openModal('stok_keluar'); });
-        btnPendapatan.addEventListener('click', function() { openModal('pendapatan'); });
-        btnPengeluaran.addEventListener('click', function() { openModal('pengeluaran'); });
+        function attachButtonEvents() {
+            var btnStokMasuk = document.getElementById('btnStokMasuk');
+            var btnStokKeluar = document.getElementById('btnStokKeluar');
+            var btnPendapatan = document.getElementById('btnPendapatan');
+            var btnPengeluaran = document.getElementById('btnPengeluaran');
+
+            if (btnStokMasuk) btnStokMasuk.addEventListener('click', function() { openModal('stok_masuk'); });
+            if (btnStokKeluar) btnStokKeluar.addEventListener('click', function() { openModal('stok_keluar'); });
+            if (btnPendapatan) btnPendapatan.addEventListener('click', function() { openModal('pendapatan'); });
+            if (btnPengeluaran) btnPengeluaran.addEventListener('click', function() { openModal('pengeluaran'); });
+        }
 
         btnCancel.addEventListener('click', closeModal);
         modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeModal(); });
 
-        // ===== SUBMIT FORM =====
         modalForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             var menu = modalForm.dataset.menu;
@@ -1109,15 +1738,11 @@
                     if (clamped) {
                         alert('⚠️ Stok keluar melebihi stok yang tersedia — stok barang ini otomatis diset ke 0.');
                     }
-                    console.log('✅ Stok keluar berhasil disimpan');
+                    console.log('✅ Stok keluar berhasil disimpan → Cash');
                 } else if (menu === 'pendapatan') {
-                    // ===== PENDAPATAN - IDENTIK DENGAN STOK KELUAR =====
-                    var clamped = await window.__toko.submitPendapatan(data);
+                    await window.__toko.submitPendapatan(data);
                     closeModal();
-                    if (clamped) {
-                        alert('⚠️ Stok keluar melebihi stok yang tersedia — stok barang ini otomatis diset ke 0.');
-                    }
-                    console.log('✅ Pendapatan berhasil disimpan (stok berkurang)');
+                    console.log('✅ Pendapatan berhasil disimpan → Cash');
                 } else if (menu === 'pengeluaran') {
                     await window.__toko.submitPengeluaran(data);
                     closeModal();
@@ -1131,6 +1756,11 @@
                 btnSubmit.innerHTML = '<i class="fas fa-check"></i> Simpan';
             }
         });
+
+        setTimeout(function() {
+            if (window.renderActionButtons) window.renderActionButtons();
+            attachButtonEvents();
+        }, 500);
 
         console.log('✅ Script utama loaded');
         console.log('📋 Daftar barang:', window.daftarNamaBarang);
