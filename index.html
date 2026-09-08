@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
+        /* ... CSS seperti sebelumnya, tambahan untuk modal detail ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
@@ -279,6 +280,7 @@
             font-weight: 900;
             letter-spacing: -1px;
             margin-bottom: 12px;
+            cursor: default;
         }
         .today-total-card .today-date {
             font-size: 13px;
@@ -343,10 +345,40 @@
         .today-details .detail-item .d-edit-btn:hover {
             background: rgba(255,255,255,0.25);
         }
+        .today-details .detail-item .d-status {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
 
         .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-        .summary-card { background: var(--card-bg); padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .summary-card .s-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+        .summary-card { 
+            background: var(--card-bg); 
+            padding: 14px 18px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .summary-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: var(--shadow-hover);
+        }
+        .summary-card .s-label { 
+            font-size: 11px; 
+            color: var(--text-secondary); 
+            font-weight: 500; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .summary-card .s-label .s-badge {
+            font-size: 9px;
+            padding: 1px 8px;
+            border-radius: 12px;
+            background: rgba(79,70,229,0.1);
+            color: var(--accent);
+        }
         .summary-card .s-value { font-size: 20px; font-weight: 800; color: var(--success); }
         .summary-card .s-value.danger { color: var(--danger); }
 
@@ -361,6 +393,162 @@
         .payment-tag.qris { background: rgba(26, 140, 74, 0.15); color: #1a8c4a; border: 1px solid rgba(26, 140, 74, 0.2); }
         .payment-tag.online { background: rgba(37, 99, 235, 0.15); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
         .payment-tag.none { background: rgba(156, 163, 175, 0.1); color: #9ca3af; border: 1px dashed #9ca3af; }
+
+        .validation-alert {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            display: none;
+        }
+        .validation-alert.show { display: block; }
+
+        /* ===== MODAL DETAIL METODE ===== */
+        .modal-detail-metode {
+            max-width: 400px;
+        }
+        .modal-detail-metode .detail-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-detail-metode .detail-item-row:last-child {
+            border-bottom: none;
+        }
+        .modal-detail-metode .detail-item-row .d-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-detail-metode .detail-item-row .d-icon-sm {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .modal-detail-metode .detail-item-row .d-icon-sm.qris { background: rgba(26, 140, 74, 0.12); color: #1a8c4a; }
+        .modal-detail-metode .detail-item-row .d-icon-sm.online { background: rgba(37, 99, 235, 0.12); color: #2563eb; }
+        .modal-detail-metode .detail-item-row .d-icon-sm.cash { background: rgba(217, 119, 6, 0.12); color: #d97706; }
+        .modal-detail-metode .detail-item-row .d-icon-sm.other { background: rgba(156, 163, 175, 0.12); color: #9ca3af; }
+        .modal-detail-metode .detail-item-row .d-label { font-weight: 500; font-size: 13px; }
+        .modal-detail-metode .detail-item-row .d-amount { font-weight: 700; font-size: 14px; }
+        .modal-detail-metode .detail-total {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .modal-detail-metode .detail-total .dt-label { color: var(--text-secondary); }
+        .modal-detail-metode .detail-total .dt-value { color: var(--success); }
+
+        /* ===== POPUP KONFIRMASI ===== */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+            animation: popupFadeIn 0.3s ease;
+        }
+        .popup-overlay.active { display: flex; }
+        .popup-box {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: popupSlideIn 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        .popup-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .popup-icon .fa-question-circle { color: var(--warning); }
+        .popup-icon .fa-exclamation-circle { color: var(--danger); }
+        .popup-icon .fa-check-circle { color: var(--success); }
+        .popup-icon .fa-info-circle { color: var(--accent); }
+        .popup-icon .fa-trash-alt { color: var(--danger); }
+        .popup-icon .fa-edit { color: var(--accent); }
+        .popup-icon .fa-save { color: var(--success); }
+        .popup-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        .popup-box p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .popup-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .popup-btn {
+            padding: 10px 28px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .popup-btn:hover { transform: translateY(-2px); }
+        .popup-btn:active { transform: scale(0.96); }
+        .popup-btn-cancel {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .popup-btn-cancel:hover { background: var(--border-color); }
+        .popup-btn-confirm {
+            background: var(--accent-gradient);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+        }
+        .popup-btn-confirm:hover { box-shadow: 0 10px 28px rgba(79, 70, 229, 0.4); }
+        .popup-btn-confirm.danger {
+            background: var(--danger);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+        }
+        .popup-btn-confirm.danger:hover { box-shadow: 0 10px 28px rgba(239, 68, 68, 0.4); }
+        .popup-btn-confirm.success {
+            background: var(--success);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+        .popup-btn-confirm.success:hover { box-shadow: 0 10px 28px rgba(16, 185, 129, 0.4); }
+
+        @keyframes popupFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes popupSlideIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
 
         @media (max-width: 1024px) {
             .stats-grid { grid-template-columns: repeat(3, 1fr); }
@@ -398,6 +586,12 @@
             .payment-tag { font-size: 10px; padding: 2px 8px; }
             .today-total-card .today-label { font-size: 12px; }
             .today-details .detail-item .d-value { font-size: 16px; }
+            .popup-box { padding: 24px 20px; }
+            .popup-icon { font-size: 36px; }
+            .popup-box h3 { font-size: 18px; }
+            .popup-btn { padding: 8px 20px; font-size: 12px; }
+            .modal-detail-metode .detail-item-row { padding: 8px 0; font-size: 12px; }
+            .modal-detail-metode .detail-total { font-size: 14px; }
         }
         @media (max-width: 480px) { 
             .stats-grid { grid-template-columns: 1fr; }
@@ -419,26 +613,21 @@
     </style>
 </head>
 <body>
-
+    <!-- SIDEBAR -->
     <div class="overlay" id="overlay"></div>
-
-    <!-- ===== SIDEBAR ===== -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <i class="fas fa-store-alt"></i>
             <h1>Toko<span>Ku</span></h1>
         </div>
-
         <ul class="sidebar-menu">
             <li class="menu-label">Menu Utama</li>
             <li><a href="#" class="active" data-menu="dashboard"><i class="fas fa-th-large"></i> Dashboard</a></li>
-
             <li class="menu-label" style="margin-top: 12px;">Manajemen</li>
             <li><a href="#" data-menu="stok"><i class="fas fa-boxes"></i> Stok <span class="badge" id="badgeStok">0</span></a></li>
             <li><a href="#" data-menu="pengeluaran"><i class="fas fa-arrow-down"></i> Pengeluaran</a></li>
             <li><a href="#" data-menu="pendapatan"><i class="fas fa-arrow-up"></i> Pendapatan</a></li>
         </ul>
-
         <div class="sidebar-footer">
             <div class="sync-status connecting" id="syncStatus">
                 <div class="dot"></div>
@@ -453,7 +642,6 @@
 
     <!-- ===== MAIN CONTENT ===== -->
     <main class="main-content" id="mainContent">
-
         <div class="page-header">
             <div>
                 <h2 id="pageTitle">Dashboard Toko</h2>
@@ -465,10 +653,7 @@
                 <div class="action-buttons" id="actionButtons"></div>
             </div>
         </div>
-
         <div id="setupBannerWrap"></div>
-
-        <!-- ===== DASHBOARD ===== -->
         <div id="dashboardContent">
             <div class="stats-grid">
                 <div class="stat-card">
@@ -490,62 +675,26 @@
                     <div class="stat-change negative" id="statPengeluaranChange"><i class="fas fa-minus"></i> 0 transaksi</div>
                 </div>
             </div>
-
             <div class="two-col">
                 <div class="card">
                     <div class="card-header">
                         <h3><i class="fas fa-boxes"></i> Stok Barang</h3>
                         <a href="#" class="action-link" data-menu="stok">Lihat Semua →</a>
                     </div>
-                    <div id="dashboardStokWrap">
-                        <div class="empty-state">
-                            <i class="fas fa-box-open"></i>
-                            <h4>Belum Ada Data Stok</h4>
-                            <p>Tambahkan stok barang pertama Anda.</p>
-                        </div>
-                    </div>
+                    <div id="dashboardStokWrap"><div class="empty-state"><i class="fas fa-box-open"></i><h4>Belum Ada Data Stok</h4><p>Tambahkan stok barang pertama Anda.</p></div></div>
                 </div>
-
                 <div class="card">
-                    <div class="card-header">
-                        <h3><i class="fas fa-chart-pie"></i> Ringkasan Keuangan</h3>
-                    </div>
+                    <div class="card-header"><h3><i class="fas fa-chart-pie"></i> Ringkasan Keuangan</h3></div>
                     <div class="finance-list">
-                        <div class="finance-item">
-                            <div class="label"><i class="fas fa-arrow-up"></i> Pendapatan</div>
-                            <div class="amount zero" id="finPendapatan">Rp 0</div>
-                        </div>
-                        <div class="finance-item">
-                            <div class="label"><i class="fas fa-arrow-down"></i> Pengeluaran</div>
-                            <div class="amount zero" id="finPengeluaran">Rp 0</div>
-                        </div>
-                        <div class="finance-item">
-                            <div class="label"><i class="fas fa-hand-holding-usd"></i> Keuntungan Bersih</div>
-                            <div class="amount zero" id="finBersih">Rp 0</div>
-                        </div>
-                        <div style="margin-top: 6px;">
-                            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);">
-                                <span>Rasio Pendapatan vs Pengeluaran</span>
-                                <span id="finRatioText">0%</span>
-                            </div>
-                            <div class="progress-bar"><div class="fill" id="finRatioFill" style="width:0%;"></div></div>
-                        </div>
+                        <div class="finance-item"><div class="label"><i class="fas fa-arrow-up"></i> Pendapatan</div><div class="amount zero" id="finPendapatan">Rp 0</div></div>
+                        <div class="finance-item"><div class="label"><i class="fas fa-arrow-down"></i> Pengeluaran</div><div class="amount zero" id="finPengeluaran">Rp 0</div></div>
+                        <div class="finance-item"><div class="label"><i class="fas fa-hand-holding-usd"></i> Keuntungan Bersih</div><div class="amount zero" id="finBersih">Rp 0</div></div>
+                        <div style="margin-top:6px;"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);"><span>Rasio Pendapatan vs Pengeluaran</span><span id="finRatioText">0%</span></div><div class="progress-bar"><div class="fill" id="finRatioFill" style="width:0%;"></div></div></div>
                     </div>
                 </div>
             </div>
-
-            <div class="card">
-                <div class="card-header"><h3><i class="fas fa-clock"></i> Aktivitas Terbaru</h3></div>
-                <div id="activityWrap">
-                    <div class="empty-state" style="padding: 20px;">
-                        <i class="fas fa-inbox" style="font-size: 32px;"></i>
-                        <h4>Belum Ada Aktivitas</h4>
-                        <p style="font-size: 13px;">Aktivitas akan muncul di sini.</p>
-                    </div>
-                </div>
-            </div>
+            <div class="card"><div class="card-header"><h3><i class="fas fa-clock"></i> Aktivitas Terbaru</h3></div><div id="activityWrap"><div class="empty-state" style="padding:20px;"><i class="fas fa-inbox" style="font-size:32px;"></i><h4>Belum Ada Aktivitas</h4><p style="font-size:13px;">Aktivitas akan muncul di sini.</p></div></div></div>
         </div>
-
         <div id="pageContent" style="display: none;"></div>
     </main>
 
@@ -561,21 +710,56 @@
         </div>
     </div>
 
-    <!-- ===== MODAL EDIT NOMINAL PER METODE ===== -->
+    <!-- ===== MODAL ALOKASI ===== -->
     <div class="modal-overlay" id="modalEditNominal">
         <div class="modal-box">
-            <h3 id="editNominalTitle"><i class="fas fa-edit"></i> Edit Nominal</h3>
+            <h3 id="editNominalTitle"><i class="fas fa-edit"></i> Alokasi Metode</h3>
             <form id="formEditNominal">
+                <div class="validation-alert" id="validationAlert">
+                    <i class="fas fa-exclamation-circle"></i> <span id="validationMessage">Total alokasi tidak boleh melebihi total pendapatan hari ini!</span>
+                </div>
                 <div id="editNominalInfo" style="font-size:12px;color:var(--text-muted);margin-bottom:14px;background:var(--bg-primary);padding:10px 14px;border-radius:8px;"></div>
                 <div class="form-group">
-                    <label id="editNominalLabel">Masukkan Nominal</label>
+                    <label id="editNominalLabel">Masukkan Alokasi</label>
                     <input type="number" id="editNominalInput" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);font-family:inherit;font-size:16px;font-weight:700;" placeholder="Masukkan nominal..." />
                 </div>
+                <div id="sisaNominalInfo" style="font-size:12px;color:var(--text-muted);margin-bottom:10px;"></div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" id="btnNominalCancel">Batal</button>
                     <button type="submit" class="btn-primary" id="btnNominalSave"><i class="fas fa-save"></i> Simpan</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL DETAIL METODE ===== -->
+    <div class="modal-overlay" id="modalDetailMetode">
+        <div class="modal-box modal-detail-metode">
+            <h3 id="detailMetodeTitle"><i class="fas fa-chart-pie"></i> Detail Metode</h3>
+            <div id="detailMetodeInfo" style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;background:var(--bg-primary);padding:10px 14px;border-radius:8px;"></div>
+            <div id="detailMetodeList"></div>
+            <div class="detail-total" id="detailMetodeTotal">
+                <span class="dt-label">Total</span>
+                <span class="dt-value">Rp 0</span>
+            </div>
+            <div class="modal-actions" style="margin-top:16px;">
+                <button type="button" class="btn-secondary" id="btnDetailClose" style="flex:1;text-align:center;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== POPUP KONFIRMASI ===== -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-box">
+            <div class="popup-icon" id="popupIcon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="popupTitle">Konfirmasi</h3>
+            <p id="popupMessage">Apakah Anda yakin?</p>
+            <div class="popup-actions" id="popupActions">
+                <button class="popup-btn popup-btn-cancel" id="popupCancel">Batal</button>
+                <button class="popup-btn popup-btn-confirm" id="popupConfirm">Ya, Lanjutkan</button>
+            </div>
         </div>
     </div>
 
@@ -673,8 +857,118 @@
         var stokTransaksiList = [];
         var pengeluaranList = [];
         var pendapatanList = [];
+        var alokasiHarianList = [];
         var isFirebaseReady = false;
 
+        // =====================================================================
+        // POPUP KONFIRMASI
+        // =====================================================================
+        function showPopup(options) {
+            return new Promise(function(resolve) {
+                var overlay = document.getElementById('popupOverlay');
+                var icon = document.getElementById('popupIcon');
+                var title = document.getElementById('popupTitle');
+                var message = document.getElementById('popupMessage');
+                var confirmBtn = document.getElementById('popupConfirm');
+                var cancelBtn = document.getElementById('popupCancel');
+
+                var iconMap = {
+                    'question': 'fa-question-circle',
+                    'danger': 'fa-exclamation-circle',
+                    'success': 'fa-check-circle',
+                    'info': 'fa-info-circle',
+                    'warning': 'fa-question-circle',
+                    'trash': 'fa-trash-alt',
+                    'edit': 'fa-edit',
+                    'save': 'fa-save'
+                };
+                icon.innerHTML = '<i class="fas ' + (iconMap[options.icon] || 'fa-question-circle') + '"></i>';
+                title.textContent = options.title || 'Konfirmasi';
+                message.textContent = options.message || 'Apakah Anda yakin?';
+                
+                var confirmClass = options.confirmClass || '';
+                confirmBtn.className = 'popup-btn popup-btn-confirm' + (confirmClass ? ' ' + confirmClass : '');
+                confirmBtn.textContent = options.confirmText || 'Ya, Lanjutkan';
+                cancelBtn.textContent = options.cancelText || 'Batal';
+
+                var newConfirmBtn = confirmBtn.cloneNode(true);
+                var newCancelBtn = cancelBtn.cloneNode(true);
+                confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+                cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                overlay.classList.add('active');
+
+                newConfirmBtn.addEventListener('click', function() {
+                    overlay.classList.remove('active');
+                    resolve(true);
+                });
+
+                newCancelBtn.addEventListener('click', function() {
+                    overlay.classList.remove('active');
+                    resolve(false);
+                });
+
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                        resolve(false);
+                    }
+                });
+            });
+        }
+
+        window.showPopup = showPopup;
+
+        // =====================================================================
+        // SHOW DETAIL METODE
+        // =====================================================================
+        window.showDetailMetode = function(title, data) {
+            var modal = document.getElementById('modalDetailMetode');
+            document.getElementById('detailMetodeTitle').innerHTML = '<i class="fas fa-chart-pie"></i> ' + title;
+            document.getElementById('detailMetodeInfo').textContent = data.info || '';
+            
+            var list = document.getElementById('detailMetodeList');
+            var items = data.items || [];
+            var total = 0;
+            
+            if (items.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="padding:20px;"><i class="fas fa-inbox" style="font-size:32px;"></i><h4>Belum ada data</h4></div>';
+            } else {
+                var html = items.map(function(item) {
+                    var iconClass = item.metode === 'qris' ? 'qris' : (item.metode === 'online' ? 'online' : (item.metode === 'cash' ? 'cash' : 'other'));
+                    var icon = item.metode === 'qris' ? 'fa-qrcode' : (item.metode === 'online' ? 'fa-wifi' : (item.metode === 'cash' ? 'fa-money-bill-wave' : 'fa-circle'));
+                    var label = item.metode === 'qris' ? 'QRIS' : (item.metode === 'online' ? 'Online' : (item.metode === 'cash' ? 'Cash' : (item.metode || 'Lainnya')));
+                    total += item.jumlah;
+                    return '<div class="detail-item-row">' +
+                        '<div class="d-left">' +
+                            '<div class="d-icon-sm ' + iconClass + '"><i class="fas ' + icon + '"></i></div>' +
+                            '<span class="d-label">' + label + '</span>' +
+                        '</div>' +
+                        '<span class="d-amount" style="color:' + (item.metode === 'cash' ? '#d97706' : (item.metode === 'qris' ? '#1a8c4a' : (item.metode === 'online' ? '#2563eb' : 'var(--text-secondary)'))) + ';">' + fmtRupiah(item.jumlah) + '</span>' +
+                    '</div>';
+                }).join('');
+                list.innerHTML = html;
+            }
+            
+            document.getElementById('detailMetodeTotal').innerHTML = 
+                '<span class="dt-label">Total</span><span class="dt-value">' + fmtRupiah(total) + '</span>';
+            
+            modal.classList.add('active');
+        };
+
+        document.getElementById('btnDetailClose').addEventListener('click', function() {
+            document.getElementById('modalDetailMetode').classList.remove('active');
+        });
+
+        document.getElementById('modalDetailMetode').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+
+        // =====================================================================
+        // FUNGSI UTAMA
+        // =====================================================================
         function slugify(str) {
             return String(str).toLowerCase().trim()
                 .replace(/[^a-z0-9]+/g, '-')
@@ -728,6 +1022,26 @@
                 var d = ts?.toDate ? ts.toDate() : new Date(ts);
                 return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
             } catch (e) { return null; }
+        }
+
+        function getMetodeLabel(metode) {
+            var map = { 'qris': 'QRIS', 'online': 'Online', 'cash': 'Cash' };
+            return map[metode] || metode || 'Lainnya';
+        }
+
+        function getMetodeIcon(metode) {
+            var map = { 'qris': 'fa-qrcode', 'online': 'fa-wifi', 'cash': 'fa-money-bill-wave' };
+            return map[metode] || 'fa-circle';
+        }
+
+        function getMetodeClass(metode) {
+            var map = { 'qris': 'qris', 'online': 'online', 'cash': 'cash' };
+            return map[metode] || 'other';
+        }
+
+        function getMetodeColor(metode) {
+            var map = { 'qris': '#1a8c4a', 'online': '#2563eb', 'cash': '#d97706' };
+            return map[metode] || 'var(--text-secondary)';
         }
 
         function timeAgo(ts) {
@@ -836,160 +1150,67 @@
             return { cls: 'in-stock', label: 'Tersedia' };
         }
 
-        // ===== AKTIVITAS TERBARU - CASHFLOW =====
         function renderActivity() {
             var today = new Date().toISOString().slice(0, 10);
-            
-            var todayPendapatan = pendapatanList.filter(function(p) {
-                return getDateKey(p.createdAt || p.tanggal) === today;
-            });
-            
-            var todayPengeluaran = pengeluaranList.filter(function(p) {
-                return getDateKey(p.createdAt || p.tanggal) === today;
-            });
-            
-            var todayStok = stokTransaksiList.filter(function(s) {
-                return getDateKey(s.createdAt) === today;
-            });
-            
+            var todayPendapatan = pendapatanList.filter(function(p) { return getDateKey(p.createdAt || p.tanggal) === today; });
+            var todayPengeluaran = pengeluaranList.filter(function(p) { return getDateKey(p.createdAt || p.tanggal) === today; });
+            var todayStok = stokTransaksiList.filter(function(s) { return getDateKey(s.createdAt) === today; });
             var allActivity = [];
-            
             todayPendapatan.forEach(function(p) {
-                allActivity.push({
-                    type: 'income',
-                    title: 'Pendapatan',
-                    desc: p.deskripsi || 'Pendapatan',
-                    amount: Number(p.jumlah) || 0,
-                    time: p.createdAt,
-                    icon: 'fa-arrow-up',
-                    iconClass: 'income'
-                });
+                allActivity.push({ type: 'income', title: 'Pendapatan', desc: p.deskripsi || 'Pendapatan', amount: Number(p.jumlah) || 0, time: p.createdAt, icon: 'fa-arrow-up', iconClass: 'income' });
             });
-            
             todayPengeluaran.forEach(function(p) {
-                allActivity.push({
-                    type: 'expense',
-                    title: 'Pengeluaran',
-                    desc: p.deskripsi || 'Pengeluaran',
-                    amount: -Number(p.jumlah) || 0,
-                    time: p.createdAt,
-                    icon: 'fa-arrow-down',
-                    iconClass: 'expense'
-                });
+                allActivity.push({ type: 'expense', title: 'Pengeluaran', desc: p.deskripsi || 'Pengeluaran', amount: -Number(p.jumlah) || 0, time: p.createdAt, icon: 'fa-arrow-down', iconClass: 'expense' });
             });
-            
             todayStok.forEach(function(s) {
                 var isMasuk = s.tipe === 'masuk';
-                allActivity.push({
-                    type: isMasuk ? 'stock-in' : 'stock-out',
-                    title: isMasuk ? 'Stok Masuk' : 'Stok Keluar',
-                    desc: s.nama + ' (' + s.jumlah + ' pcs)',
-                    amount: isMasuk ? Number(s.jumlah) : -Number(s.jumlah),
-                    time: s.createdAt,
-                    icon: isMasuk ? 'fa-boxes' : 'fa-box',
-                    iconClass: isMasuk ? 'stock-in' : 'stock-out'
-                });
+                allActivity.push({ type: isMasuk ? 'stock-in' : 'stock-out', title: isMasuk ? 'Stok Masuk' : 'Stok Keluar', desc: s.nama + ' (' + s.jumlah + ' pcs)', amount: isMasuk ? Number(s.jumlah) : -Number(s.jumlah), time: s.createdAt, icon: isMasuk ? 'fa-boxes' : 'fa-box', iconClass: isMasuk ? 'stock-in' : 'stock-out' });
             });
-            
             allActivity.sort(function(a, b) {
                 var da = a.time?.toDate ? a.time.toDate() : new Date(a.time);
                 var db = b.time?.toDate ? b.time.toDate() : new Date(b.time);
                 return db - da;
             });
-            
             allActivity = allActivity.slice(0, 10);
-            
             var wrap = document.getElementById('activityWrap');
             if (allActivity.length === 0) {
-                wrap.innerHTML = `
-                    <div class="empty-state" style="padding:20px;">
-                        <i class="fas fa-inbox" style="font-size:32px;"></i>
-                        <h4>Belum Ada Aktivitas Hari Ini</h4>
-                        <p style="font-size:13px;">Mulai transaksi pertama Anda hari ini.</p>
-                    </div>`;
+                wrap.innerHTML = `<div class="empty-state" style="padding:20px;"><i class="fas fa-inbox" style="font-size:32px;"></i><h4>Belum Ada Aktivitas Hari Ini</h4><p style="font-size:13px;">Mulai transaksi pertama Anda hari ini.</p></div>`;
                 return;
             }
-            
-            var totalIncome = 0;
-            var totalExpense = 0;
-            
+            var totalIncome = 0, totalExpense = 0;
             var html = allActivity.map(function(a) {
                 var amountClass = a.amount >= 0 ? 'positive' : 'negative';
                 var amountStr = a.amount >= 0 ? '+' + fmtRupiah(a.amount) : fmtRupiah(a.amount);
                 if (a.type === 'expense') amountStr = '-' + fmtRupiah(Math.abs(a.amount));
                 if (a.type === 'stock-in') amountStr = '+' + fmtRupiah(a.amount);
                 if (a.type === 'stock-out') amountStr = '-' + fmtRupiah(Math.abs(a.amount));
-                
                 if (a.amount > 0 && (a.type === 'income' || a.type === 'stock-in')) totalIncome += a.amount;
                 if (a.amount < 0 || a.type === 'expense' || a.type === 'stock-out') totalExpense += Math.abs(a.amount);
-                
-                return `
-                    <div class="activity-item">
-                        <div class="a-icon ${a.iconClass}"><i class="fas ${a.icon}"></i></div>
-                        <div class="a-text">
-                            <div class="a-title">${a.title}</div>
-                            <div class="a-desc">${escapeHtml(a.desc)}</div>
-                        </div>
-                        <div class="a-amount ${amountClass}">${amountStr}</div>
-                        <div class="a-time">${timeAgo(a.time)}</div>
-                    </div>
-                `;
+                return `<div class="activity-item"><div class="a-icon ${a.iconClass}"><i class="fas ${a.icon}"></i></div><div class="a-text"><div class="a-title">${a.title}</div><div class="a-desc">${escapeHtml(a.desc)}</div></div><div class="a-amount ${amountClass}">${amountStr}</div><div class="a-time">${timeAgo(a.time)}</div></div>`;
             }).join('');
-            
-            var summaryHtml = `
-                <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:2px solid var(--border-color);margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-                    <div style="font-weight:600;font-size:14px;">
-                        <i class="fas fa-coins" style="color:var(--success);"></i> Masuk: ${fmtRupiah(totalIncome)}
-                    </div>
-                    <div style="font-weight:600;font-size:14px;">
-                        <i class="fas fa-arrow-down" style="color:var(--danger);"></i> Keluar: ${fmtRupiah(totalExpense)}
-                    </div>
-                    <div style="font-weight:700;font-size:15px;color:${(totalIncome - totalExpense) >= 0 ? 'var(--success)' : 'var(--danger)'};">
-                        <i class="fas fa-${(totalIncome - totalExpense) >= 0 ? 'arrow-up' : 'arrow-down'}"></i> 
-                        Saldo: ${fmtRupiah(totalIncome - totalExpense)}
-                    </div>
-                </div>
-            `;
-            
+            var summaryHtml = `<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:2px solid var(--border-color);margin-bottom:8px;flex-wrap:wrap;gap:8px;"><div style="font-weight:600;font-size:14px;"><i class="fas fa-coins" style="color:var(--success);"></i> Masuk: ${fmtRupiah(totalIncome)}</div><div style="font-weight:600;font-size:14px;"><i class="fas fa-arrow-down" style="color:var(--danger);"></i> Keluar: ${fmtRupiah(totalExpense)}</div><div style="font-weight:700;font-size:15px;color:${(totalIncome - totalExpense) >= 0 ? 'var(--success)' : 'var(--danger)'};"><i class="fas fa-${(totalIncome - totalExpense) >= 0 ? 'arrow-up' : 'arrow-down'}"></i> Saldo: ${fmtRupiah(totalIncome - totalExpense)}</div></div>`;
             wrap.innerHTML = summaryHtml + html;
         }
 
-        // ===== HALAMAN STOK =====
         function renderStokPage() {
             var stokList = getStokList();
             var tr = stokList.map(function(s) {
                 var st = stokStatus(s.jumlah);
-                return '<tr>' +
-                    '<td>' + escapeHtml(s.nama) + '</td>' +
-                    '<td style="font-weight:700;">' + Number(s.jumlah).toLocaleString('id-ID') + '</td>' +
-                    '<td>' + (s.harga ? fmtRupiah(s.harga) : '-') + '</td>' +
-                    '<td><span class="status-badge ' + st.cls + '">' + st.label + '</span></td>' +
-                    '</tr>';
+                return '<tr><td>' + escapeHtml(s.nama) + '</td><td style="font-weight:700;">' + Number(s.jumlah).toLocaleString('id-ID') + '</td><td>' + (s.harga ? fmtRupiah(s.harga) : '-') + '</td><td><span class="status-badge ' + st.cls + '">' + st.label + '</span></td></tr>';
             }).join('');
-            var rows = '<div class="table-wrap"><table><thead><tr><th>Nama Barang</th><th>Stok Saat Ini</th><th>Harga Satuan</th><th>Status</th></tr></thead><tbody>' + tr + '</tbody></table></div>';
-            document.getElementById('pageContent').innerHTML = rows;
+            document.getElementById('pageContent').innerHTML = '<div class="table-wrap"><table><thead><tr><th>Nama Barang</th><th>Stok Saat Ini</th><th>Harga Satuan</th><th>Status</th></tr></thead><tbody>' + tr + '</tbody></table></div>';
         }
 
-        // ===== HALAMAN PENGELUARAN =====
         function renderPengeluaranPage() {
             var rows;
             if (pengeluaranList.length === 0) {
                 rows = '<div class="empty-state"><i class="fas fa-wallet"></i><h4>Belum Ada Pengeluaran</h4></div>';
             } else {
                 var tr = pengeluaranList.map(function(p) {
-                    return '<tr>' +
-                        '<td>' + escapeHtml(p.deskripsi) + '</td>' +
-                        '<td>' + (p.tanggal || '-') + '</td>' +
-                        '<td style="color:var(--danger);font-weight:700;">' + fmtRupiah(p.jumlah) + '</td>' +
-                        '<td><button class="row-action" data-del="pengeluaran" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td>' +
-                        '</tr>';
+                    return '<tr><td>' + escapeHtml(p.deskripsi) + '</td><td>' + (p.tanggal || '-') + '</td><td style="color:var(--danger);font-weight:700;">' + fmtRupiah(p.jumlah) + '</td><td><button class="row-action" data-del="pengeluaran" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td></tr>';
                 }).join('');
                 var total = pengeluaranList.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
-                rows = '<div style="margin-bottom:16px;padding:14px;background:var(--bg-primary);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
-                    '<span style="font-weight:600;">Total Pengeluaran</span>' +
-                    '<span style="font-weight:800;color:var(--danger);font-size:20px;">' + fmtRupiah(total) + '</span>' +
-                    '</div>' +
-                    '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
+                rows = '<div style="margin-bottom:16px;padding:14px;background:var(--bg-primary);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span style="font-weight:600;">Total Pengeluaran</span><span style="font-weight:800;color:var(--danger);font-size:20px;">' + fmtRupiah(total) + '</span></div><div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
             }
             document.getElementById('pageContent').innerHTML = rows;
             attachDeleteHandlers();
@@ -1013,26 +1234,31 @@
 
             var totalFiltered = filtered.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
 
-            // ===== TOTAL HARI INI =====
             var todayData = pendapatanList.filter(function(p) {
                 return getDateKey(p.createdAt || p.tanggal) === today;
             });
 
             var totalHariIni = todayData.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
 
-            // Hitung per metode
-            var qrisTotal = todayData.filter(function(p) { return p.metode === 'qris'; }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
-            var onlineTotal = todayData.filter(function(p) { return p.metode === 'online'; }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
-            var cashTotal = todayData.filter(function(p) { return p.metode === 'cash'; }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
-            var otherTotal = todayData.filter(function(p) { return !p.metode || (p.metode !== 'qris' && p.metode !== 'online' && p.metode !== 'cash'); }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+            var todayAlokasi = alokasiHarianList.filter(function(a) {
+                return a.tanggal === today;
+            });
+
+            var qrisTotal = todayAlokasi.filter(function(a) { return a.metode === 'qris'; }).reduce(function(s, a) { return s + (Number(a.jumlah) || 0); }, 0);
+            var onlineTotal = todayAlokasi.filter(function(a) { return a.metode === 'online'; }).reduce(function(s, a) { return s + (Number(a.jumlah) || 0); }, 0);
+            var cashTotal = todayAlokasi.filter(function(a) { return a.metode === 'cash'; }).reduce(function(s, a) { return s + (Number(a.jumlah) || 0); }, 0);
+            var otherTotal = todayAlokasi.filter(function(a) { return a.metode !== 'qris' && a.metode !== 'online' && a.metode !== 'cash'; }).reduce(function(s, a) { return s + (Number(a.jumlah) || 0); }, 0);
+
+            var allocatedTotal = qrisTotal + onlineTotal + cashTotal + otherTotal;
+            var sisaTotal = totalHariIni - allocatedTotal;
 
             var todayDateFormatted = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-            // ===== CARD TOTAL HARI INI =====
             var todayCardHtml = `
                 <div class="today-total-card">
                     <div class="today-label">
                         <i class="fas fa-calendar-day"></i> TOTAL PENDAPATAN HARI INI
+                        <span style="font-size:12px;opacity:0.6;margin-left:10px;">(tidak bisa diubah)</span>
                     </div>
                     <div class="today-value">${fmtRupiah(totalHariIni)}</div>
                     <div class="today-date"><i class="far fa-calendar-alt"></i> ${todayDateFormatted}</div>
@@ -1043,9 +1269,10 @@
                                     <div class="d-icon"><i class="fas fa-qrcode"></i></div>
                                     <span class="d-label">QRIS</span>
                                 </div>
-                                <button class="d-edit-btn" onclick="openEditNominalModal('qris', ${qrisTotal})">✏️ Edit</button>
+                                <button class="d-edit-btn" onclick="openEditAlokasiModal('qris')">✏️ Edit</button>
                             </div>
                             <div class="d-value" id="display_qris">${fmtRupiah(qrisTotal)}</div>
+                            <div class="d-status">${((qrisTotal / totalHariIni) * 100 || 0).toFixed(1)}%</div>
                         </div>
                         <div class="detail-item">
                             <div class="d-header">
@@ -1053,9 +1280,10 @@
                                     <div class="d-icon"><i class="fas fa-wifi"></i></div>
                                     <span class="d-label">Online</span>
                                 </div>
-                                <button class="d-edit-btn" onclick="openEditNominalModal('online', ${onlineTotal})">✏️ Edit</button>
+                                <button class="d-edit-btn" onclick="openEditAlokasiModal('online')">✏️ Edit</button>
                             </div>
                             <div class="d-value" id="display_online">${fmtRupiah(onlineTotal)}</div>
+                            <div class="d-status">${((onlineTotal / totalHariIni) * 100 || 0).toFixed(1)}%</div>
                         </div>
                         <div class="detail-item">
                             <div class="d-header">
@@ -1063,32 +1291,88 @@
                                     <div class="d-icon"><i class="fas fa-money-bill-wave"></i></div>
                                     <span class="d-label">Cash</span>
                                 </div>
-                                <button class="d-edit-btn" onclick="openEditNominalModal('cash', ${cashTotal})">✏️ Edit</button>
+                                <button class="d-edit-btn" onclick="openEditAlokasiModal('cash')">✏️ Edit</button>
                             </div>
                             <div class="d-value" id="display_cash">${fmtRupiah(cashTotal)}</div>
+                            <div class="d-status">${((cashTotal / totalHariIni) * 100 || 0).toFixed(1)}%</div>
                         </div>
                     </div>
-                    ${otherTotal > 0 ? `<div style="margin-top:10px;font-size:12px;opacity:0.8;">+ Lainnya: ${fmtRupiah(otherTotal)}</div>` : ''}
+                    ${sisaTotal > 0 ? `<div style="margin-top:12px;font-size:13px;opacity:0.8;background:rgba(255,255,255,0.08);padding:8px 14px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                        <span><i class="fas fa-hourglass-half"></i> Belum dialokasikan</span>
+                        <span style="font-weight:700;">${fmtRupiah(sisaTotal)}</span>
+                    </div>` : ''}
+                    ${otherTotal > 0 ? `<div style="margin-top:8px;font-size:12px;opacity:0.7;">+ Lainnya: ${fmtRupiah(otherTotal)}</div>` : ''}
+                    <div style="margin-top:8px;font-size:11px;opacity:0.5;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;">
+                        Total dialokasikan: ${fmtRupiah(allocatedTotal)} dari ${fmtRupiah(totalHariIni)}
+                        ${allocatedTotal > totalHariIni ? `<span style="color:#ff6b6b;"> ⚠️ MELEBIHI TOTAL!</span>` : 
+                          allocatedTotal < totalHariIni ? ` (sisa ${fmtRupiah(sisaTotal)})` : ' ✓'}
+                    </div>
                 </div>
             `;
 
+            // ===== SUMMARY CARDS =====
             var monthlyTotal = pendapatanList.filter(function(p) {
                 return getMonthKey(p.createdAt || p.tanggal) === today.slice(0, 7);
             }).reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
 
+            // Detail untuk bulan ini
+            var monthData = pendapatanList.filter(function(p) {
+                return getMonthKey(p.createdAt || p.tanggal) === today.slice(0, 7);
+            });
+            var monthItems = [];
+            var monthMetodeMap = {};
+            monthData.forEach(function(p) {
+                var m = p.metode || 'cash';
+                if (!monthMetodeMap[m]) monthMetodeMap[m] = 0;
+                monthMetodeMap[m] += Number(p.jumlah) || 0;
+            });
+            for (var key in monthMetodeMap) {
+                monthItems.push({ metode: key, jumlah: monthMetodeMap[key] });
+            }
+            monthItems.sort(function(a, b) { return b.jumlah - a.jumlah; });
+
+            // Detail untuk tanggal terpilih
+            var selectedData = filtered;
+            var selectedItems = [];
+            var selectedMetodeMap = {};
+            selectedData.forEach(function(p) {
+                var m = p.metode || 'cash';
+                if (!selectedMetodeMap[m]) selectedMetodeMap[m] = 0;
+                selectedMetodeMap[m] += Number(p.jumlah) || 0;
+            });
+            for (var key in selectedMetodeMap) {
+                selectedItems.push({ metode: key, jumlah: selectedMetodeMap[key] });
+            }
+            selectedItems.sort(function(a, b) { return b.jumlah - a.jumlah; });
+
+            var filterLabel = filterType === 'day' ? 'Tanggal ' + filterDate : 'Bulan ' + filterDate;
+
             var summaryHtml = `
                 <div class="summary-grid">
-                    <div class="summary-card">
-                        <div class="s-label">📆 Total Bulan Ini</div>
+                    <div class="summary-card" onclick="showDetailMetode('Total Bulan Ini', {
+                        info: 'Rincian pendapatan berdasarkan metode pembayaran untuk bulan ${today.slice(0, 7)}',
+                        items: ${JSON.stringify(monthItems)}
+                    })">
+                        <div class="s-label">
+                            📆 Total Bulan Ini
+                            <span class="s-badge"><i class="fas fa-eye"></i> Detail</span>
+                        </div>
                         <div class="s-value">${fmtRupiah(monthlyTotal)}</div>
                     </div>
-                    <div class="summary-card">
-                        <div class="s-label">📊 Total ${filterType === 'day' ? 'Tanggal' : 'Bulan'} Terpilih</div>
+                    <div class="summary-card" onclick="showDetailMetode('Total ${filterLabel}', {
+                        info: 'Rincian pendapatan berdasarkan metode pembayaran untuk ${filterLabel}',
+                        items: ${JSON.stringify(selectedItems)}
+                    })">
+                        <div class="s-label">
+                            📊 Total ${filterLabel}
+                            <span class="s-badge"><i class="fas fa-eye"></i> Detail</span>
+                        </div>
                         <div class="s-value">${fmtRupiah(totalFiltered)}</div>
                     </div>
                 </div>
             `;
 
+            // ===== FILTER =====
             var filterHtml = `
                 <div class="filter-section">
                     <label>Tampilkan:</label>
@@ -1102,6 +1386,7 @@
                 </div>
             `;
 
+            // ===== TABLE =====
             var rows;
             if (filtered.length === 0) {
                 rows = '<div class="empty-state"><i class="fas fa-coins"></i><h4>Tidak ada pendapatan</h4></div>';
@@ -1112,13 +1397,7 @@
                     var metodeClass = metode === 'qris' ? 'qris' : (metode === 'online' ? 'online' : 'cash');
                     var metodeLabel = metode === 'qris' ? 'QRIS' : (metode === 'online' ? 'Online' : 'Cash');
                     var metodeHtml = `<span class="payment-tag ${metodeClass}">${metodeLabel}</span>`;
-                    return '<tr>' +
-                        '<td>' + escapeHtml(p.deskripsi) + fromStok + '</td>' +
-                        '<td>' + (p.tanggal || '-') + '</td>' +
-                        '<td>' + metodeHtml + '</td>' +
-                        '<td style="color:var(--success);font-weight:700;">' + fmtRupiah(p.jumlah) + '</td>' +
-                        '<td><button class="row-action" data-del="pendapatan" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td>' +
-                        '</tr>';
+                    return '<tr><td>' + escapeHtml(p.deskripsi) + fromStok + '</td><td>' + (p.tanggal || '-') + '</td><td>' + metodeHtml + '</td><td style="color:var(--success);font-weight:700;">' + fmtRupiah(p.jumlah) + '</td><td><button class="row-action" data-del="pendapatan" data-id="' + p.id + '" title="Hapus"><i class="fas fa-trash"></i></button></td></tr>';
                 }).join('');
                 rows = '<div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Tanggal</th><th>Metode</th><th>Jumlah</th><th></th></tr></thead><tbody>' + tr + '</tbody></table></div>';
             }
@@ -1149,36 +1428,78 @@
         };
 
         // =====================================================================
-        // EDIT NOMINAL PER METODE
+        // EDIT ALOKASI
         // =====================================================================
-        var editNominalData = { metode: '', currentTotal: 0 };
+        var editAlokasiData = { metode: '' };
 
-        window.openEditNominalModal = function(metode, currentTotal) {
-            editNominalData.metode = metode;
-            editNominalData.currentTotal = currentTotal;
+        window.openEditAlokasiModal = function(metode) {
+            editAlokasiData.metode = metode;
             
-            var labelMap = {
-                'qris': 'QRIS',
-                'online': 'Online',
-                'cash': 'Cash'
-            };
+            var today = new Date().toISOString().slice(0, 10);
             
-            document.getElementById('editNominalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Nominal ' + labelMap[metode];
-            document.getElementById('editNominalLabel').textContent = 'Masukkan nominal baru untuk ' + labelMap[metode];
-            document.getElementById('editNominalInfo').innerHTML = 'Saat ini: <strong>' + fmtRupiah(currentTotal) + '</strong>';
+            var todayData = pendapatanList.filter(function(p) {
+                return getDateKey(p.createdAt || p.tanggal) === today;
+            });
+            var totalHariIni = todayData.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+            
+            var currentAlokasi = alokasiHarianList.filter(function(a) {
+                return a.tanggal === today && a.metode === metode;
+            });
+            var currentTotal = currentAlokasi.reduce(function(s, a) { return s + (Number(a.jumlah) || 0); }, 0);
+            
+            var labelMap = { 'qris': 'QRIS', 'online': 'Online', 'cash': 'Cash' };
+            var metodeDisplay = labelMap[metode] || metode;
+            
+            document.getElementById('editNominalTitle').innerHTML = '<i class="fas fa-edit"></i> Alokasi ' + metodeDisplay;
+            document.getElementById('editNominalLabel').textContent = 'Masukkan alokasi baru untuk ' + metodeDisplay;
+            document.getElementById('editNominalInfo').innerHTML = 'Alokasi saat ini: <strong>' + fmtRupiah(currentTotal) + '</strong>';
+            
+            var otherTotal = alokasiHarianList.filter(function(a) {
+                return a.tanggal === today && a.metode !== metode;
+            }).reduce(function(s, a) { return s + (Number(a.jumlah) || 0); }, 0);
+            
+            var maxAllowed = totalHariIni - otherTotal;
+            
             document.getElementById('editNominalInput').value = currentTotal;
-            document.getElementById('editNominalInput').placeholder = 'Masukkan nominal...';
+            document.getElementById('editNominalInput').max = maxAllowed;
+            document.getElementById('editNominalInput').placeholder = 'Maksimal ' + fmtRupiah(maxAllowed);
             
+            var sisaInfo = document.getElementById('sisaNominalInfo');
+            sisaInfo.innerHTML = '📊 Total metode lain: <strong>' + fmtRupiah(otherTotal) + '</strong><br>' +
+                '💰 Maksimum untuk ' + metodeDisplay + ': <strong style="color:' + (maxAllowed >= 0 ? 'var(--success)' : 'var(--danger)') + ';">' + fmtRupiah(maxAllowed) + '</strong><br>' +
+                '📌 Total pendapatan hari ini: <strong>' + fmtRupiah(totalHariIni) + '</strong> (tidak berubah)';
+            
+            document.getElementById('validationAlert').classList.remove('show');
             document.getElementById('modalEditNominal').classList.add('active');
         };
 
+        document.getElementById('editNominalInput').addEventListener('input', function() {
+            var val = parseInt(this.value) || 0;
+            var max = parseInt(this.max) || 0;
+            var alert = document.getElementById('validationAlert');
+            var msg = document.getElementById('validationMessage');
+            
+            if (val > max && max > 0) {
+                alert.classList.add('show');
+                msg.textContent = '❌ Alokasi melebihi batas maksimum ' + fmtRupiah(max) + '!';
+                document.getElementById('btnNominalSave').disabled = true;
+            } else {
+                alert.classList.remove('show');
+                document.getElementById('btnNominalSave').disabled = false;
+            }
+        });
+
         document.getElementById('btnNominalCancel').addEventListener('click', function() {
             document.getElementById('modalEditNominal').classList.remove('active');
+            document.getElementById('validationAlert').classList.remove('show');
+            document.getElementById('btnNominalSave').disabled = false;
         });
 
         document.getElementById('modalEditNominal').addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('active');
+                document.getElementById('validationAlert').classList.remove('show');
+                document.getElementById('btnNominalSave').disabled = false;
             }
         });
 
@@ -1186,78 +1507,122 @@
             e.preventDefault();
             
             var nominal = parseInt(document.getElementById('editNominalInput').value);
+            var maxAllowed = parseInt(document.getElementById('editNominalInput').max) || 0;
+            
             if (!nominal || nominal < 0) {
                 alert('Masukkan nominal yang valid!');
                 return;
             }
             
-            var metode = editNominalData.metode;
-            var currentTotal = editNominalData.currentTotal;
+            if (nominal > maxAllowed) {
+                alert('❌ Alokasi tidak boleh melebihi ' + fmtRupiah(maxAllowed) + '!');
+                return;
+            }
+            
+            var metode = editAlokasiData.metode;
+            var today = new Date().toISOString().slice(0, 10);
+            
+            var todayData = pendapatanList.filter(function(p) {
+                return getDateKey(p.createdAt || p.tanggal) === today;
+            });
+            var totalHariIni = todayData.reduce(function(s, p) { return s + (Number(p.jumlah) || 0); }, 0);
+            
+            var currentAlokasi = alokasiHarianList.filter(function(a) {
+                return a.tanggal === today && a.metode === metode;
+            });
+            var currentTotal = currentAlokasi.reduce(function(s, a) { return s + (Number(a.jumlah) || 0); }, 0);
             
             if (nominal === currentTotal) {
-                alert('Nominal sama dengan yang sekarang.');
+                alert('Alokasi sama dengan yang sekarang.');
                 document.getElementById('modalEditNominal').classList.remove('active');
                 return;
             }
             
-            var today = new Date().toISOString().slice(0, 10);
-            var todayData = pendapatanList.filter(function(p) {
-                return getDateKey(p.createdAt || p.tanggal) === today && p.metode === metode;
+            var labelMap = { 'qris': 'QRIS', 'online': 'Online', 'cash': 'Cash' };
+            var metodeDisplay = labelMap[metode] || metode;
+            
+            var confirmed = await showPopup({
+                title: 'Konfirmasi Alokasi',
+                message: 'Update alokasi ' + metodeDisplay + ' dari ' + fmtRupiah(currentTotal) + ' menjadi ' + fmtRupiah(nominal) + '?\n\nTotal pendapatan hari ini: ' + fmtRupiah(totalHariIni) + ' (TETAP)',
+                icon: 'edit',
+                confirmText: 'Ya, Update',
+                confirmClass: 'success'
             });
             
-            if (todayData.length === 0) {
-                alert('Tidak ada data dengan metode ' + metode + ' untuk hari ini.');
-                document.getElementById('modalEditNominal').classList.remove('active');
-                return;
-            }
-            
-            var labelMap = {
-                'qris': 'QRIS',
-                'online': 'Online',
-                'cash': 'Cash'
-            };
-            
-            var confirmMsg = 'Update nominal ' + labelMap[metode] + ' dari ' + fmtRupiah(currentTotal) + ' menjadi ' + fmtRupiah(nominal) + '?\n\n' +
-                todayData.length + ' transaksi akan diupdate secara proporsional.';
-            if (!confirm(confirmMsg)) return;
+            if (!confirmed) return;
             
             try {
-                var promises = todayData.map(function(p) {
-                    var proporsi = currentTotal > 0 ? Number(p.jumlah) / currentTotal : 1 / todayData.length;
-                    var newJumlah = Math.round(nominal * proporsi);
-                    if (newJumlah < 0) newJumlah = 0;
-                    var docRef = doc(db, 'pendapatan', p.id);
-                    return updateDoc(docRef, { jumlah: newJumlah });
+                var existing = alokasiHarianList.filter(function(a) {
+                    return a.tanggal === today && a.metode === metode;
                 });
                 
-                await Promise.all(promises);
+                if (existing.length > 0) {
+                    var docRef = doc(db, 'alokasi_harian', existing[0].id);
+                    if (nominal > 0) {
+                        await updateDoc(docRef, { jumlah: nominal });
+                    } else {
+                        await deleteDoc(docRef);
+                    }
+                } else {
+                    if (nominal > 0) {
+                        await addDoc(collection(db, 'alokasi_harian'), {
+                            tanggal: today,
+                            metode: metode,
+                            jumlah: nominal,
+                            createdAt: serverTimestamp()
+                        });
+                    }
+                }
+                
                 document.getElementById('modalEditNominal').classList.remove('active');
+                document.getElementById('validationAlert').classList.remove('show');
+                document.getElementById('btnNominalSave').disabled = false;
                 renderPendapatanPage();
-                console.log('✅ Nominal ' + labelMap[metode] + ' diupdate menjadi:', nominal);
+                console.log('✅ Alokasi ' + metodeDisplay + ' diupdate menjadi:', nominal);
+                
             } catch (err) {
                 console.error('❌ Gagal update:', err);
                 alert('Gagal update: ' + err.message);
             }
         });
 
+        // =====================================================================
+        // DELETE HANDLER
+        // =====================================================================
         function attachDeleteHandlers() {
             document.querySelectorAll('[data-del]').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', async function() {
                     if (!db) return;
                     var coll = btn.dataset.del;
                     var id = btn.dataset.id;
-                    if (!confirm('Hapus data ini?')) return;
-                    deleteDoc(doc(db, coll, id)).then(function() {
-                        console.log('✅ Data dihapus');
-                    }).catch(function(e) {
-                        alert('Gagal menghapus: ' + e.message);
+                    
+                    var labelMap = {
+                        'pendapatan': 'pendapatan',
+                        'pengeluaran': 'pengeluaran'
+                    };
+                    
+                    var confirmed = await showPopup({
+                        title: 'Hapus Data',
+                        message: 'Apakah Anda yakin ingin menghapus data ' + (labelMap[coll] || '') + ' ini?',
+                        icon: 'trash',
+                        confirmText: 'Ya, Hapus',
+                        confirmClass: 'danger'
                     });
+                    
+                    if (!confirmed) return;
+                    
+                    try {
+                        await deleteDoc(doc(db, coll, id));
+                        console.log('✅ Data dihapus');
+                    } catch (e) {
+                        alert('Gagal menghapus: ' + e.message);
+                    }
                 });
             });
         }
 
         // =====================================================================
-        // SUBMIT FUNCTIONS - OTOMATIS METODE CASH
+        // SUBMIT FUNCTIONS
         // =====================================================================
         async function submitStokMasuk(data) {
             var nama = data.nama;
@@ -1270,27 +1635,17 @@
                 var snap = await tx.get(itemRef);
                 var current = snap.exists() ? (Number(snap.data().jumlah) || 0) : 0;
                 var next = current + jumlahInput;
-                var payload = { 
-                    nama: nama, 
-                    jumlah: next, 
-                    harga: hargaSatuan,
-                    updatedAt: serverTimestamp() 
-                };
+                var payload = { nama: nama, jumlah: next, harga: hargaSatuan, updatedAt: serverTimestamp() };
                 tx.set(itemRef, payload, { merge: true });
             });
 
             await addDoc(collection(db, 'stok_transaksi'), {
-                nama: nama, 
-                tipe: 'masuk', 
-                jumlah: jumlahInput,
-                harga: hargaSatuan,
-                createdAt: serverTimestamp()
+                nama: nama, tipe: 'masuk', jumlah: jumlahInput, harga: hargaSatuan, createdAt: serverTimestamp()
             });
 
             return true;
         }
 
-        // ===== STOK KELUAR - OTOMATIS CASH =====
         async function submitStokKeluar(data) {
             var nama = data.nama;
             var jumlahInput = Number(data.jumlah);
@@ -1304,21 +1659,12 @@
                 var current = snap.exists() ? (Number(snap.data().jumlah) || 0) : 0;
                 var next = current - jumlahInput;
                 if (next < 0) { next = 0; clamped = true; }
-                var payload = { 
-                    nama: nama, 
-                    jumlah: next, 
-                    harga: hargaSatuan,
-                    updatedAt: serverTimestamp() 
-                };
+                var payload = { nama: nama, jumlah: next, harga: hargaSatuan, updatedAt: serverTimestamp() };
                 tx.set(itemRef, payload, { merge: true });
             });
 
             await addDoc(collection(db, 'stok_transaksi'), {
-                nama: nama, 
-                tipe: 'keluar', 
-                jumlah: jumlahInput,
-                harga: hargaSatuan,
-                createdAt: serverTimestamp()
+                nama: nama, tipe: 'keluar', jumlah: jumlahInput, harga: hargaSatuan, createdAt: serverTimestamp()
             });
 
             if (hargaSatuan > 0) {
@@ -1334,16 +1680,13 @@
                     barang: nama,
                     jumlahBarang: jumlahInput,
                     hargaSatuan: hargaSatuan,
-                    metode: 'cash'  // <-- OTOMATIS CASH
+                    metode: 'cash'
                 });
-                
-                console.log('💰 Pendapatan dari stok keluar (Cash):', pendapatanDeskripsi, '=', fmtRupiah(totalPendapatan));
             }
 
             return clamped;
         }
 
-        // ===== PENDAPATAN MANUAL - OTOMATIS CASH =====
         async function submitPendapatan(data) {
             var nama = data.nama;
             var jumlahInput = Number(data.jumlah);
@@ -1362,10 +1705,8 @@
                     barang: nama,
                     jumlahBarang: jumlahInput,
                     hargaSatuan: hargaSatuan,
-                    metode: 'cash'  // <-- OTOMATIS CASH
+                    metode: 'cash'
                 });
-                
-                console.log('💰 Pendapatan manual (Cash):', pendapatanDeskripsi, '=', fmtRupiah(totalPendapatan));
                 return true;
             } else {
                 throw new Error('Harga untuk barang "' + nama + '" belum ditentukan!');
@@ -1409,35 +1750,30 @@
                     isFirebaseReady = true;
                     setSyncStatus('online', '✅ Tersinkron • Real-time');
                     renderAll();
-                }, function(err) {
-                    console.error('❌ Error listener stok_items:', err);
-                });
+                }, function(err) { console.error('❌ Error listener stok_items:', err); });
 
                 onSnapshot(query(collection(db, 'stok_transaksi'), orderBy('createdAt', 'desc'), limit(50)), function(snap) {
                     stokTransaksiList = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
                     renderAll();
-                }, function(err) {
-                    console.error('❌ Error listener stok_transaksi:', err);
-                });
+                }, function(err) { console.error('❌ Error listener stok_transaksi:', err); });
 
                 onSnapshot(query(collection(db, 'pengeluaran'), orderBy('createdAt', 'desc')), function(snap) {
                     pengeluaranList = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
                     renderAll();
-                }, function(err) {
-                    console.error('❌ Error listener pengeluaran:', err);
-                });
+                }, function(err) { console.error('❌ Error listener pengeluaran:', err); });
 
                 onSnapshot(query(collection(db, 'pendapatan'), orderBy('createdAt', 'desc')), function(snap) {
                     pendapatanList = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
                     renderAll();
-                }, function(err) {
-                    console.error('❌ Error listener pendapatan:', err);
-                });
+                }, function(err) { console.error('❌ Error listener pendapatan:', err); });
+
+                onSnapshot(query(collection(db, 'alokasi_harian'), orderBy('createdAt', 'desc')), function(snap) {
+                    alokasiHarianList = snap.docs.map(function(d) { return { id: d.id, ...d.data() }; });
+                    renderAll();
+                }, function(err) { console.error('❌ Error listener alokasi_harian:', err); });
 
                 analyticsIsSupported().then(function(ok) { 
-                    if (ok) {
-                        try { getAnalytics(app); } catch(e) {}
-                    }
+                    if (ok) { try { getAnalytics(app); } catch(e) {} }
                 }).catch(function() {});
 
             } catch (e) {
@@ -1464,6 +1800,8 @@
         window.renderPendapatanPage = renderPendapatanPage;
         window.renderActionButtons = renderActionButtons;
         window.renderActivity = renderActivity;
+        window.openEditAlokasiModal = openEditAlokasiModal;
+        window.showDetailMetode = showDetailMetode;
 
         console.log('✅ Firebase module selesai dimuat');
     </script>
@@ -1640,27 +1978,14 @@
                         var label = (o && typeof o === 'object') ? o.label : o;
                         return '<option value="' + val + '">' + label + '</option>';
                     }).join('');
-                    return '<div class="form-group" data-field-group="' + f.name + '">' +
-                        '<label>' + f.label + '</label>' +
-                        '<select name="' + f.name + '" ' + (f.required ? 'required' : '') + '>' +
-                        '<option value="" disabled selected>Pilih barang...</option>' +
-                        opts +
-                        '</select>' +
-                        helperHtml +
-                        '</div>';
+                    return '<div class="form-group" data-field-group="' + f.name + '"><label>' + f.label + '</label><select name="' + f.name + '" ' + (f.required ? 'required' : '') + '><option value="" disabled selected>Pilih barang...</option>' + opts + '</select>' + helperHtml + '</div>';
                 }
                 
                 var highlightClass = f.name === 'pendapatan_jumlah' ? ' field-highlight' : '';
                 
-                return '<div class="form-group" data-field-group="' + f.name + '">' +
-                    '<label>' + f.label + '</label>' +
-                    '<input type="' + typeAttr + '" name="' + f.name + '" class="' + highlightClass + '" ' + 
-                    (f.required ? 'required' : '') + minAttr + readonlyAttr + placeholderAttr + ' />' +
-                    helperHtml +
-                    '</div>';
+                return '<div class="form-group" data-field-group="' + f.name + '"><label>' + f.label + '</label><input type="' + typeAttr + '" name="' + f.name + '" class="' + highlightClass + '" ' + (f.required ? 'required' : '') + minAttr + readonlyAttr + placeholderAttr + ' />' + helperHtml + '</div>';
             }).join('');
 
-            // Auto-fill harga dan pendapatan
             var namaSelect = modalForm.querySelector('select[name="nama"]');
             var hargaInput = modalForm.querySelector('input[name="harga"]');
             var jumlahInput = modalForm.querySelector('input[name="jumlah"]');
@@ -1767,4 +2092,4 @@
     </script>
 
 </body>
-</html>
+    </html>
